@@ -1,5 +1,5 @@
 const spawn = require('child_process').spawn;
-const ls = spawn('ls', ['-lh', '/usr']);
+const ls = spawn('gphoto2', ['--trigger-capture']);
 
 ls.stdout.on('data', (data) => {
 	console.log(`stdout: ${data}`);
