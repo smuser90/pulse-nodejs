@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/smuser90/pulse-nodejs/issues"
   },
-  "homepage": "https://github.com/smuser90/pulse-nodejs#readme"
+  "homepage": "https://github.com/smuser90/pulse-nodejs#readme",
+  "dependencies": {
+    "express": "^4.14.0"
+  }
 }
