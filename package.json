@@ -1,0 +1,19 @@
+{
+  "name": "pulse-nodejs",
+  "version": "1.0.0",
+  "description": "Node code for Pulse Pro",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smuser90/pulse-nodejs.git"
+  },
+  "author": "Sam Musso",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/smuser90/pulse-nodejs/issues"
+  },
+  "homepage": "https://github.com/smuser90/pulse-nodejs#readme"
+}
