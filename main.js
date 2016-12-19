@@ -8,7 +8,7 @@ var filename = 'photo.jpg';
 
 socket.on('connect', function(){
 
-	const gphoto = spawn('gphoto2', ['--capture-image-and-download']);
+	const gphoto = spawn('gphoto2', ['--capture-image-and-download', '--filename ./photo.jpg']);
 
 	gphoto.stdout.on('data', (data) => {
 		console.log(`stdout: ${data}`);
@@ -32,3 +32,7 @@ var sendPhoto = function(){
 	var fileData = fs.readFileSync(`./${filename}`);
 	socket.emit('push-photo', {fd: fileData});
 };
+
+socket.on('push-photo-success', function(){
+	const rm = spawn('rm', [`./${filename}`]);
+});
