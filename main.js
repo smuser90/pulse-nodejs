@@ -6,9 +6,8 @@ const stream = ss.createStream();
 const socket = require('socket.io-client')('http://10.1.10.231:1025');
 var filename = 'photo.jpg';
 
-socket.on('connect', function(){
-
-	const gphoto = spawn('gphoto2', ['--capture-image-and-download', '--filename ./photo.jpg']);
+function gphotoCapture(){
+	const gphoto = spawn('gphoto2', ['--capture-image-and-download', '--filename=./'+filename]);
 
 	gphoto.stdout.on('data', (data) => {
 		console.log(`stdout: ${data}`);
@@ -26,6 +25,14 @@ socket.on('connect', function(){
 			console.log("There was a problem capturing the photo");
 		}
 	});
+}
+
+socket.on('connect', function(){
+	gphotoCapture();
+});
+
+socket.on('capture-photo', function(){
+	gphotoCapture();
 });
 
 var sendPhoto = function(){
