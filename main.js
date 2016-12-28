@@ -8,7 +8,7 @@ var filename = 'photo.jpg';
 
 socket.on('connect', function(){
 
-	const gphoto = spawn('gphoto2', ['--capture-image-and-download', '--filename ./photo.jpg']);
+	const gphoto = spawn('gphoto2', ['--capture-image-and-download', '--filename=./photo.jpg']);
 
 	gphoto.stdout.on('data', (data) => {
 		console.log(`stdout: ${data}`);
