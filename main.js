@@ -3,7 +3,7 @@ const ss = require('socket.io-stream');
 const fs = require('fs');
 const stream = ss.createStream();
 
-const socket = require('socket.io-client')('http://10.1.10.231');
+const socket = require('socket.io-client')('http://10.1.10.231:1025');
 var filename = 'photo.jpg';
 
 socket.on('connect', function(){
