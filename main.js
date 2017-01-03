@@ -9,7 +9,7 @@ var filename = 'photo.jpg';
 var start, end;
 
 function gphotoCapture(){
-	const gphoto = spawn('gphoto2', ['--capture-image-and-download', '--filename=./'+filename]);
+	const gphoto = spawn('gphoto2', ['--capture-image-and-download', '--debug', '--filename=./'+filename]);
 
 	gphoto.stdout.on('data', (data) => {
 
@@ -24,7 +24,14 @@ function gphotoCapture(){
 	});
 
 	gphoto.stderr.on('data', (data) => {
-	  console.log(`stderr: ${data}`);
+		if(data.includes("gp_port_open")){
+			console.log(Date.now()+": Opened ptp port");
+		}
+
+		if(data.includes("PTP_OC_NIKON_InitiateCaptureRecInMedia")){
+			console.log(Date.now()+": Sending capture command")
+		}
+	  // console.log(`stderr: ${data}`);
 	});
 
 	gphoto.on('close', (code) => {
