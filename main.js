@@ -61,7 +61,7 @@ socket.on('capture-photo', function(){
 var sendPhoto = function(packet){
 	console.log(Date.now()+": Pushing photo...");
 	var fileData = fs.readFileSync(`./${filename}`);
-	var packets = fileData.length() / CHUNK_SIZE;
+	var packets = fileData.length / CHUNK_SIZE;
 	var startIndex = packet * CHUNK_SIZE;
 	socket.emit('push-photo', {
 		packet: packet,
