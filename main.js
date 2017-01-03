@@ -53,6 +53,6 @@ var sendPhoto = function(){
 };
 
 socket.on('push-photo-success', function(){
-	console.log(Date.now()+": Photo push succesful");
+	console.log(Date.now()+": Photo push succesful\r\n");
 	const rm = spawn('rm', [`./${filename}`]);
 });
