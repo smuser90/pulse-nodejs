@@ -6,6 +6,8 @@ const stream = ss.createStream();
 const socket = require('socket.io-client')('http://10.1.10.231:1025');
 var filename = 'photo.jpg';
 
+var start, end;
+
 function gphotoCapture(){
 	const gphoto = spawn('gphoto2', ['--capture-image-and-download', '--filename=./'+filename]);
 
@@ -18,28 +20,31 @@ function gphotoCapture(){
 	});
 
 	gphoto.on('close', (code) => {
-	  console.log(`gphoto2 exited with code: ${code}`);
+	  console.log(Date.now()+`: gphoto2 exited with code: ${code}`);
 		if(code === 0){
 			sendPhoto();
 		}else{
-			console.log("There was a problem capturing the photo");
+			console.log(Date.now()+": There was a problem capturing the photo");
 		}
 	});
 }
 
 socket.on('connect', function(){
-	gphotoCapture();
+	console.log(Date.now()+": Connected to client. Awaiting commands...");
 });
 
 socket.on('capture-photo', function(){
+	console.log(Date.now()+": Initiating photo capture...");
 	gphotoCapture();
 });
 
 var sendPhoto = function(){
+	console.log(Date.now()+": Pushing photo...");
 	var fileData = fs.readFileSync(`./${filename}`);
 	socket.emit('push-photo', {fd: fileData});
 };
 
 socket.on('push-photo-success', function(){
+	console.log(Date.now()+": Photo push succesful");
 	const rm = spawn('rm', [`./${filename}`]);
 });
