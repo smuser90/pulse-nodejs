@@ -3,6 +3,8 @@ const ss = require('socket.io-stream');
 const fs = require('fs');
 const stream = ss.createStream();
 
+const CHUNK_SIZE = 2048;
+
 const socket = require('socket.io-client')('http://10.1.10.231:1025');
 var filename = 'photo.jpg';
 
@@ -40,7 +42,7 @@ function gphotoCapture(){
 	gphoto.on('close', (code) => {
 	  console.log(Date.now()+`: gphoto2 exited with code: ${code}`);
 		if(code === 0){
-			sendPhoto();
+			sendPhoto(0);
 		}else{
 			console.log(Date.now()+": There was a problem capturing the photo");
 		}
@@ -56,15 +58,24 @@ socket.on('capture-photo', function(){
 	gphotoCapture();
 });
 
-var sendPhoto = function(){
+var sendPhoto = function(packet){
 	console.log(Date.now()+": Pushing photo...");
 	var fileData = fs.readFileSync(`./${filename}`);
-	socket.emit('push-photo', {fd: fileData});
+	var packets = fileData.length() / CHUNK_SIZE;
+	var startIndex = packet * CHUNK_SIZE;
+	socket.emit('push-photo', {
+		packet: packet,
+		packets: packets,
+		fd: fileData.slice(startIndex, startIndex + CHUNK_SIZE)});
 };
 
-socket.on('push-photo-success', function(){
-	console.log(Date.now()+": Photo push succesful\r\n");
-	const rm = spawn('rm', [`./${filename}`]);
+socket.on('push-photo-success', function(data){
+	if(data.packet < data.packets - 1){
+		sendPhoto(data.packet + 1);
+	}else{
+		console.log(Date.now()+": Photo push succesful\r\n");
+		const rm = spawn('rm', [`./${filename}`]);
+	}
 });
 
 console.log("Initialization complete. Looking for client...");
