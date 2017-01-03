@@ -12,7 +12,15 @@ function gphotoCapture(){
 	const gphoto = spawn('gphoto2', ['--capture-image-and-download', '--filename=./'+filename]);
 
 	gphoto.stdout.on('data', (data) => {
-		console.log(`stdout: ${data}`);
+
+		if(data.includes("New file is in location")){
+			console.log(Date.now()+": Photo added to camera SD");
+		}
+		else if(data.includes("Deleting file")){
+			console.log(Date.now(+": Photo added to Pulse rootfs")
+		}else {
+			console.log(`stdout: ${data}`);
+		}
 	});
 
 	gphoto.stderr.on('data', (data) => {
