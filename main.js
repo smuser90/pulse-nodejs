@@ -17,7 +17,7 @@ function gphotoCapture(){
 			console.log(Date.now()+": Photo added to camera SD");
 		}
 		else if(data.includes("Deleting file")){
-			console.log(Date.now(+": Photo added to Pulse rootfs")
+			console.log(Date.now()+": Photo added to Pulse rootfs")
 		}else {
 			console.log(`stdout: ${data}`);
 		}
