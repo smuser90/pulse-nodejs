@@ -56,3 +56,5 @@ socket.on('push-photo-success', function(){
 	console.log(Date.now()+": Photo push succesful\r\n");
 	const rm = spawn('rm', [`./${filename}`]);
 });
+
+console.log("Initialization complete. Looking for client...");
