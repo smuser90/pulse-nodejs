@@ -73,6 +73,7 @@ socket.on('push-photo-success', function(data){
 	if(data.packet < data.packets - 1){
 		sendPhoto(data.packet + 1);
 	}else{
+		socket.emit('push-photo-complete');
 		console.log(Date.now()+": Photo push succesful\r\n");
 		const rm = spawn('rm', [`./${filename}`]);
 	}
