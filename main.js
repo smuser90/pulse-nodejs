@@ -3,7 +3,7 @@ const ss = require('socket.io-stream');
 const fs = require('fs');
 const stream = ss.createStream();
 
-const CHUNK_SIZE = 10240;
+const CHUNK_SIZE = 102400;
 
 const socket = require('socket.io-client')('http://10.1.10.231:1025');
 var filename = 'photo.jpg';
@@ -62,7 +62,11 @@ socket.on('capture-photo', function(){
 var sendPhoto = function(packet){
 	// console.log(Date.now()+": Pushing photo...");
 	var fileData = fs.readFileSync(`./${filename}`);
-	var packets = fileData.length / CHUNK_SIZE;
+	var packets = Math.floor(fileData.length / CHUNK_SIZE);
+	if(fileData.length % CHUNK_SIZE){
+		packets++;
+	}
+
 	var startIndex = packet * CHUNK_SIZE;
 	socket.emit('push-photo', {
 		packet: packet,
