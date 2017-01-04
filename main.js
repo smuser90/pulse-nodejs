@@ -3,7 +3,7 @@ const ss = require('socket.io-stream');
 const fs = require('fs');
 const stream = ss.createStream();
 
-const CHUNK_SIZE = 2048;
+const CHUNK_SIZE = 10240;
 
 const socket = require('socket.io-client')('http://10.1.10.231:1025');
 var filename = 'photo.jpg';
@@ -42,6 +42,7 @@ function gphotoCapture(){
 	gphoto.on('close', (code) => {
 	  console.log(Date.now()+`: gphoto2 exited with code: ${code}`);
 		if(code === 0){
+			console.log("Starting photo transfer");
 			sendPhoto(0);
 		}else{
 			console.log(Date.now()+": There was a problem capturing the photo");
@@ -59,7 +60,7 @@ socket.on('capture-photo', function(){
 });
 
 var sendPhoto = function(packet){
-	console.log(Date.now()+": Pushing photo...");
+	// console.log(Date.now()+": Pushing photo...");
 	var fileData = fs.readFileSync(`./${filename}`);
 	var packets = fileData.length / CHUNK_SIZE;
 	var startIndex = packet * CHUNK_SIZE;
