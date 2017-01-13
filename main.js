@@ -63,13 +63,20 @@ function gphotoCapture(){
 	// 		console.log(Date.now()+": There was a problem capturing the photo");
 	// 	}
 	// });
-
 	camera.takePicture({
-    targetPath: '/foo.XXXXXX'
-  }, function (er, tmpname) {
-    fs.renameSync(tmpname, __dirname + '/'+filename);
-		sendPhoto(0);
-  });
+	    preview: true,
+	    targetPath: '/foo.XXXXXX'
+	  }, function (er, tmpname) {
+			fs.renameSync(tmpname, __dirname + '/'+filename);
+			sendPhoto(0);
+	  });
+
+	// camera.takePicture({
+  //   targetPath: '/foo.XXXXXX'
+  // }, function (er, tmpname) {
+  //   fs.renameSync(tmpname, __dirname + '/'+filename);
+	// 	sendPhoto(0);
+  // });
 }
 
 socket.on('connect', function(){
