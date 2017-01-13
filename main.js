@@ -11,7 +11,13 @@ const CHUNK_SIZE = 102400;
 var camera;
 
 GPhoto.list(function (list) {
+	if(list.length === 0){
+		console.log("No camera found!")
+		process.exit(1);
+	}
 	camera = list[0];
+	// Save pictures to sd card instead of RAM
+	camera.setConfigValue('capturetarget', 1, function (er) {});
 });
 
 const socket = require('socket.io-client')('http://10.1.10.231:1025');
