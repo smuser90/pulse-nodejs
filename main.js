@@ -20,7 +20,7 @@ GPhoto.list(function (list) {
 	camera.setConfigValue('capturetarget', 1, function (er) {});
 });
 
-const socket = require('socket.io-client')('http://10.1.10.231:1025');
+const socket = require('socket.io-client')('http://10.1.10.124:1025');
 var filename = 'photo.jpg';
 
 var start, end;
@@ -65,7 +65,7 @@ function gphotoCapture(){
 	// });
 
 	camera.takePicture({
-    targetPath: '/tmp/foo.XXXXXX'
+    targetPath: '/foo.XXXXXX'
   }, function (er, tmpname) {
     fs.renameSync(tmpname, __dirname + '/'+filename);
 		sendPhoto(0);
@@ -83,7 +83,7 @@ socket.on('capture-photo', function(){
 
 var sendPhoto = function(packet){
 	// console.log(Date.now()+": Pushing photo...");
-	var fileData = fs.readFileSync(`./${filename}`);
+	var fileData = fs.readFileSync('./'+filename);
 	var packets = Math.floor(fileData.length / CHUNK_SIZE);
 	if(fileData.length % CHUNK_SIZE){
 		packets++;
@@ -102,7 +102,7 @@ socket.on('push-photo-success', function(data){
 	}else{
 		socket.emit('push-photo-complete');
 		console.log(Date.now()+": Photo push succesful\r\n");
-		const rm = spawn('rm', [`./${filename}`]);
+		const rm = spawn('rm', ['./'+filename]);
 	}
 });
 
