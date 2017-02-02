@@ -17,14 +17,13 @@ fs.stat(socketPath, function(err) {
     if (!err) fs.unlinkSync(socketPath);
     var unixServer = net.createServer(function(localSerialConnection) {
         localSerialConnection.on('data', function(data) {
-		console.log(Date.now()+": Burst - "+burst);
 						if(burst === 0){
 							buffer = data;
 						}else{
 							buffer = Buffer.concat([buffer, data]);
 						}
 						burst++;
-	
+            // data is a buffer from the socket
         });
         // write to socket with localSerialConnection.write()
     });
