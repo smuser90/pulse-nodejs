@@ -1,12 +1,9 @@
 const spawn = require('child_process').spawn;
-const ss = require('socket.io-stream');
 const fs = require('fs');
-const stream = ss.createStream();
-
 const gphoto2 = require('gphoto2');
 const GPhoto = new gphoto2.GPhoto2();
 
-const CHUNK_SIZE = 102400;
+const CHUNK_SIZE = 30720;
 
 var socketPath = '/run/sock1.sock';
 var net = require('net');
@@ -14,14 +11,20 @@ var net = require('net');
 var camera;
 var buffer;
 
+var burst = 0;
 
 fs.stat(socketPath, function(err) {
     if (!err) fs.unlinkSync(socketPath);
     var unixServer = net.createServer(function(localSerialConnection) {
         localSerialConnection.on('data', function(data) {
-						buffer = data;
-						sendPhoto(0);
-            // data is a buffer from the socket
+		console.log(Date.now()+": Burst - "+burst);
+						if(burst === 0){
+							buffer = data;
+						}else{
+							buffer = Buffer.concat([buffer, data]);
+						}
+						burst++;
+	
         });
         // write to socket with localSerialConnection.write()
     });
@@ -44,17 +47,27 @@ GPhoto.list(function (list) {
 	camera.setConfigValue('capturetarget', 1, function (er) {});
 });
 
-const socket = require('socket.io-client')('http://10.1.10.124:1025');
+const socket = require('socket.io-client')('http://192.168.2.1:1025', {httpCompression: false});
 var filename = 'photo.jpg';
 
 var start, end;
 
 function gphotoLiveView(){
+	console.log(Date.now()+": Getting frame");
 	camera.takePicture({
 	    preview: true,
-	    socket: socketPath
+	    targetPath: '/foo.XXXXXX'
+	    //socket: socketPath
 	  }, function (er, tmpname) {
 				// Data is coming through IPC not callback
+		if(er){
+			console.log("Error: "+er);
+		}else{
+			console.log(Date.now()+": Got frame - "+tmpname);
+			buffer = fs.readFileSync(tmpname);
+			sendPhoto(0);
+			//gphotoLiveView();
+		}
 	  });
 }
 
@@ -77,11 +90,13 @@ socket.on('capture-photo', function(){
 });
 
 socket.on('live-view-frame', function(){
+	console.log(Date.now()+": Getting Frame");
 	gphotoLiveView();
 });
 
 var sendPhoto = function(packet){
-	// console.log(Date.now()+": Pushing photo...");
+	console.log(Date.now()+ ": send photo chunk "+packet);
+	burst = 0;
 	var fileData = buffer;
 	var packets = Math.floor(fileData.length / CHUNK_SIZE);
 	if(fileData.length % CHUNK_SIZE){
@@ -89,10 +104,14 @@ var sendPhoto = function(packet){
 	}
 
 	var startIndex = packet * CHUNK_SIZE;
+	var dat = fileData.slice(startIndex, startIndex + CHUNK_SIZE);
+	console.log(Date.now()+ ": after slice");
+	console.log("length: "+dat.length);
 	socket.emit('push-photo', {
 		packet: packet,
 		packets: packets,
-		fd: fileData.slice(startIndex, startIndex + CHUNK_SIZE)});
+		fd: dat
+	});
 };
 
 socket.on('push-photo-success', function(data){
@@ -101,8 +120,9 @@ socket.on('push-photo-success', function(data){
 	}else{
 		socket.emit('push-photo-complete');
 		console.log(Date.now()+": Photo push succesful\r\n");
-		const rm = spawn('rm', ['./'+filename]);
+		// const rm = spawn('rm', ['./'+filename]);
+		gphotoLiveView();
 	}
 });
 
-console.log("Initialization complete. Looking for client...");
+console.log("Initialization complete. \r\nScanning for client...");
