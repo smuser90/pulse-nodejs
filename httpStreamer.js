@@ -8,6 +8,23 @@ const GPhoto = new gphoto2.GPhoto2();
 
 const CHUNK_SIZE = 102400;
 
+var express = require('express');
+var app = express();
+
+app.get('/', function(req, res){
+  res.send('Hello Alpine!');
+});
+
+var frameResponse;
+app.get('/frame', function(req, res){
+  frameResponse = res;
+  gphotoLiveView();
+});
+
+app.listen(80, function() {
+	console.log('http streamer is running on port 80');
+});
+
 var socketPath = '/run/sock1.sock';
 var net = require('net');
 
@@ -52,9 +69,13 @@ var start, end;
 function gphotoLiveView(){
 	camera.takePicture({
 	    preview: true,
-	    socket: socketPath
+	    targetPath: '/foo.XXXXXX'
 	  }, function (er, tmpname) {
-				// Data is coming through IPC not callback
+		if(er){
+			gphotoLiveView();
+		}else{
+			frameResponse.send(fs.readFileSync(tmpname));
+		}
 	  });
 }
 
@@ -106,3 +127,4 @@ socket.on('push-photo-success', function(data){
 });
 
 console.log("Initialization complete. Looking for client...");
+
