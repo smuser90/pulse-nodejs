@@ -66,6 +66,9 @@ function gphotoCapture(dontSend){
 	camera.takePicture({
 	    targetPath: '/foo.XXXXXX'
 	  }, function (er, tmpname) {
+      if(er){
+        console.log("Capture error: "+er);
+      }
 			buffer = fs.readFileSync(tmpname);
       if(!dontSend){
 			     sendPhoto(0);
@@ -75,7 +78,8 @@ function gphotoCapture(dontSend){
 
 function timelapseStep(){
   setTimeout(function(){
-    gphotoCapture();
+    console.log("Stepping TL...");
+    gphotoCapture(true);
     timelapseStep();
   }, tlObject.interval);
 }
@@ -97,7 +101,9 @@ socket.on('timelapse', function(tl){
   if(tl && tl.interval){
     tlObject.interval = tl.interval;
   }
-
+  console.log("Received timelapse packet!");
+  console.dir(tl);
+  timelapseStep();
 });
 
 var sendPhoto = function(packet){
