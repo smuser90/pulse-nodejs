@@ -14,6 +14,10 @@ var net = require('net');
 var camera;
 var buffer;
 
+var tlObject = {
+  interval: 1000, // ms
+};
+
 
 fs.stat(socketPath, function(err) {
     if (!err) fs.unlinkSync(socketPath);
@@ -58,13 +62,22 @@ function gphotoLiveView(){
 	  });
 }
 
-function gphotoCapture(){
+function gphotoCapture(dontSend){
 	camera.takePicture({
 	    targetPath: '/foo.XXXXXX'
 	  }, function (er, tmpname) {
 			buffer = fs.readFileSync(tmpname);
-			sendPhoto(0);
+      if(!dontSend){
+			     sendPhoto(0);
+      }
 	  });
+}
+
+function timelapseStep(){
+  setTimeout(function(){
+    gphotoCapture();
+    timelapseStep();
+  }, tlObject.interval);
 }
 
 socket.on('connect', function(){
@@ -78,6 +91,13 @@ socket.on('capture-photo', function(){
 
 socket.on('live-view-frame', function(){
 	gphotoLiveView();
+});
+
+socket.on('timelapse', function(tl){
+  if(tl && tl.interval){
+    tlObject.interval = tl.interval;
+  }
+
 });
 
 var sendPhoto = function(packet){
