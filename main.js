@@ -17,7 +17,7 @@ var net = require('net');
 var camera;
 var buffer;
 
-var socket = require('socket.io-client')('http://10.1.10.124:1025');
+var socket = require('socket.io-client')('http://192.168.1.11:1025');
 var filename = 'photo.jpg';
 
 var start, end;
@@ -26,6 +26,22 @@ var tlObject = {
 	interval: 1000, // ms
 	photos: 5
 };
+
+var app = require('express')();
+
+app.get('/', function(req, res){
+  res.send('Hello Alpine!');
+});
+
+var frameResponse;
+app.get('/frame', function(req, res){
+  frameResponse = res;
+  gphotoLiveView();
+});
+
+app.listen(80, function() {
+	console.log('http stream server is running on port 80');
+});
 
 var getCamera = function() {
 	var deferred = Q.defer();
@@ -62,10 +78,15 @@ getCamera().then(function(cam) {
 function gphotoLiveView() {
 	camera.takePicture({
 		preview: true,
-		socket: socketPath
-	}, function(er, tmpname) {
-		// Data is coming through IPC not callback
-	});
+		targetPath: '/foo.XXXXXX'
+	}, function (er, tmpname) {
+  if(er){
+    gphotoLiveView();
+  }else{
+    frameResponse.send(fs.readFileSync(tmpname));
+    fs.unlinkSync(tmpname);
+  }
+  });
 }
 
 function gphotoCapture(dontSend) {
