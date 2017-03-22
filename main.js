@@ -1,12 +1,13 @@
-const spawn = require('child_process').spawn;
-const ss = require('socket.io-stream');
-const fs = require('fs');
-const stream = ss.createStream();
+var spawn = require('child_process').spawn;
+var Q = require('q');
+var ss = require('socket.io-stream');
+var fs = require('fs');
+var stream = ss.createStream();
 
-const gphoto2 = require('gphoto2');
-const GPhoto = new gphoto2.GPhoto2();
+var gphoto2 = require('gphoto2');
+var GPhoto = new gphoto2.GPhoto2();
 
-const CHUNK_SIZE = 102400;
+var CHUNK_SIZE = 102400;
 
 var socketPath = '/run/sock1.sock';
 var net = require('net');
@@ -16,39 +17,42 @@ var buffer;
 
 var tlObject = {
   interval: 1000, // ms
+  photos: 5
 };
 
+var listCameras = function(){
+  var deferred = Q.defer();
+  console.log('Getting list of cameras...');
+  GPhoto.list(function (list) {
+  	if(list.length === 0){
+  		console.log("No camera found! Exiting...");
+  		process.exit(1);
+  	}
+  	camera = list[0];
+  	// Save pictures to sd card instead of RAM
+    deferred.resolve(camera);
+  });
+  return deferred.promise;
+};
 
-fs.stat(socketPath, function(err) {
-    if (!err) fs.unlinkSync(socketPath);
-    var unixServer = net.createServer(function(localSerialConnection) {
-        localSerialConnection.on('data', function(data) {
-						buffer = data;
-						sendPhoto(0);
-            // data is a buffer from the socket
-        });
-        // write to socket with localSerialConnection.write()
-    });
+var setCameraStorage = function(cam, storage){
+  var deferred = Q.defer();
+  console.log('Setting camera storage to '+storage);
+  cam.setConfigValue('capturetarget', storage, function (er) {
+    if(er){
+      deferred.reject(er);
+    }else{
+      deferred.resolve();
+    }
+  });
+  return deferred.promise;
+};
 
-	unixServer.listen(socketPath, function(err, path){
-		if(!err){
-		console.log("IPC Server started!");
-		}
-	});
+listCameras().then(function(cam){
+  setCameraStorage(cam, 1);
 });
 
-
-GPhoto.list(function (list) {
-	if(list.length === 0){
-		console.log("No camera found!");
-		process.exit(1);
-	}
-	camera = list[0];
-	// Save pictures to sd card instead of RAM
-	camera.setConfigValue('capturetarget', 1, function (er) {});
-});
-
-const socket = require('socket.io-client')('http://10.1.10.124:1025');
+var socket = require('socket.io-client')('http://10.1.10.124:1025');
 var filename = 'photo.jpg';
 
 var start, end;
@@ -63,24 +67,34 @@ function gphotoLiveView(){
 }
 
 function gphotoCapture(dontSend){
-	camera.takePicture({
-	    targetPath: '/foo.XXXXXX'
-	  }, function (er, tmpname) {
+  camera.setConfigValue('capturetarget', 1, function(){
+    camera.takePicture({
+      download: false
+  	    // targetPath: '/foo.XXXXXX'
+  	  }, function (er, tmpname) {
       if(er){
         console.log("Capture error: "+er);
+      }else{
+          console.log("tmpname: "+tmpname);
+			    //  buffer = fs.readFileSync(tmpname);
+           if(!dontSend){
+			          sendPhoto(0);
+           }
+           tlObject.photos--;
       }
-			buffer = fs.readFileSync(tmpname);
-      if(!dontSend){
-			     sendPhoto(0);
-      }
-	  });
+  	});
+  });
+
 }
 
 function timelapseStep(){
   setTimeout(function(){
-    console.log("Stepping TL...");
+    console.log("Stepping TL... "+tlObject.photos);
+
     gphotoCapture(true);
-    timelapseStep();
+    if(tlObject.photos > 1){
+      timelapseStep();
+    }
   }, tlObject.interval);
 }
 
@@ -100,6 +114,7 @@ socket.on('live-view-frame', function(){
 socket.on('timelapse', function(tl){
   if(tl && tl.interval){
     tlObject.interval = tl.interval;
+    tlObject.photos = tl.photos;
   }
   console.log("Received timelapse packet!");
   console.dir(tl);
@@ -127,8 +142,27 @@ socket.on('push-photo-success', function(data){
 	}else{
 		socket.emit('push-photo-complete');
 		console.log(Date.now()+": Photo push succesful\r\n");
-		const rm = spawn('rm', ['./'+filename]);
+		var rm = spawn('rm', ['./'+filename]);
 	}
+});
+
+
+fs.stat(socketPath, function(err) {
+    if (!err) fs.unlinkSync(socketPath);
+    var unixServer = net.createServer(function(localSerialConnection) {
+        localSerialConnection.on('data', function(data) {
+						buffer = data;
+						sendPhoto(0);
+            // data is a buffer from the socket
+        });
+        // write to socket with localSerialConnection.write()
+    });
+
+	unixServer.listen(socketPath, function(err, path){
+		if(!err){
+		console.log("IPC Server started!");
+		}
+	});
 });
 
 console.log("Initialization complete. Looking for client...");
