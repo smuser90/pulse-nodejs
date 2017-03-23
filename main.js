@@ -24,7 +24,10 @@ var start, end;
 
 var tlObject = {
 	interval: 1000, // ms
-	photos: 5
+	photos: 5,
+  running: false,
+  startPhoto: Date.now(),
+  endPhoto: Date.now()
 };
 
 var app = require('express')();
@@ -37,6 +40,11 @@ var frameResponse;
 app.get('/frame', function(req, res){
   frameResponse = res;
   gphotoLiveView();
+});
+
+var captureResponse;
+app.get('/capture', function(req, res){
+
 });
 
 app.listen(80, function() {
@@ -71,11 +79,29 @@ var setCameraStorage = function(cam, storage) {
 	return deferred.promise;
 };
 
+var getCameraSettings = function(){
+  var deferred = Q.defer();
+  console.log("Getting camera shutter setting...");
+  camera.getConfig(
+    function(er, settings){
+
+      deferred.resolve(settings.main.children);
+    }
+  );
+  return deferred.promise;
+};
+
 getCamera().then(function(cam) {
 	setCameraStorage(cam, 1);
+  getCameraSettings().then(function(settings){
+      console.log("Camera settings: ");
+      console.log("Shutter: "+settings.capturesettings.children.shutterspeed2.value);
+      console.log("ISO: "+settings.imgsettings.children.iso.value);
+      console.log("Image Resolution: "+settings.imgsettings.children.imagesize.value);
+  });
 });
 
-function gphotoLiveView() {
+var gphotoLiveView = function gphotoLiveView() {
 	camera.takePicture({
 		preview: true,
 		targetPath: '/foo.XXXXXX'
@@ -87,39 +113,54 @@ function gphotoLiveView() {
     fs.unlinkSync(tmpname);
   }
   });
-}
+};
 
-function gphotoCapture(dontSend) {
+var gphotoCapture = function gphotoCapture(dontSend) {
   setCameraStorage(camera,1).then(
     function(){
+      tlObject.startPhoto = Date.now();
       camera.takePicture({
   			download: false
   			// targetPath: '/foo.XXXXXX'
   		}, function(er, tmpname) {
   			if (er) {
   				console.log("Capture error: " + er);
+          gphotoCapture(dontSend);
   			} else {
   				console.log("Storage Location: " + tmpname);
   				//  buffer = fs.readFileSync(tmpname);
   				if (!dontSend) {
   					sendPhoto(0);
   				}
+          tlObject.endPhoto = Date.now();
   				tlObject.photos--;
+          if (tlObject.photos === 0) {
+      			tlObject.running = false;
+            console.log("Timelapse complete!      :D");
+      		}
+          if(tlObject.running){
+            timelapseStep();
+          }
   			}
   		});
     }
   );
-}
+};
 
 function timelapseStep() {
+  var waitTime;
+  var elapsed = tlObject.endPhoto - tlObject.startPhoto;
+  if(elapsed > tlObject.interval){
+    waitTime = 1; // It's go time;
+  }else{
+    waitTime = tlObject.interval - elapsed;
+    console.log("Elapsed time was: "+elapsed+"ms\nWaiting "+waitTime+"ms for next photo");
+  }
 	setTimeout(function() {
 		console.log("Stepping TL... " + tlObject.photos);
-
+    lastTLStep = Date.now();
 		gphotoCapture(true);
-		if (tlObject.photos > 1) {
-			timelapseStep();
-		}
-	}, tlObject.interval);
+	}, waitTime);
 }
 
 socket.on('connect', function() {
@@ -139,10 +180,11 @@ socket.on('timelapse', function(tl) {
 	if (tl && tl.interval) {
 		tlObject.interval = tl.interval;
 		tlObject.photos = tl.photos;
+    tlObject.running = true;
 	}
 	console.log("Received timelapse packet!");
 	console.dir(tl);
-	timelapseStep();
+	gphotoCapture(true);
 });
 
 var sendPhoto = function(packet) {
