@@ -85,6 +85,7 @@ var getCameraSettings = function(){
   camera.getConfig(
     function(er, settings){
 
+      camSettings = settings.main.children;
       deferred.resolve(settings.main.children);
     }
   );
@@ -93,13 +94,45 @@ var getCameraSettings = function(){
 
 getCamera().then(function(cam) {
 	setCameraStorage(cam, 1);
-  getCameraSettings().then(function(settings){
-      console.log("Camera settings: ");
-      console.log("Shutter: "+settings.capturesettings.children.shutterspeed2.value);
-      console.log("ISO: "+settings.imgsettings.children.iso.value);
-      console.log("Image Resolution: "+settings.imgsettings.children.imagesize.value);
+  getCameraSettings().then(function(){
+    hdrPhoto(5);
   });
 });
+
+var camSettings;
+var hdrPhoto = function(photos){
+  console.log("HDR Photo: "+photos);
+  if(photos > 0){
+    console.log("Shutter is: "+camSettings.capturesettings.children.shutterspeed2.value);
+    setCameraSetting('shutterspeed2', camSettings.capturesettings.children.shutterspeed2.choices[camSettings.capturesettings.children.shutterspeed2.choices.indexOf(camSettings.capturesettings.children.shutterspeed2.value)+1]).then(
+      function(){
+        gphotoCapture(true).then(function(){
+          getCameraSettings().then(
+            function(){
+              hdrPhoto(photos-1);
+            }
+          );
+        });
+      }
+    );
+  }
+};
+
+
+var setCameraSetting = function(setting, value){
+  var deferred = Q.defer();
+  console.log('Setting camera '+setting+' to '+value);
+  camera.setConfigValue(setting, value, function(er){
+    if(er){
+      console.log('Error setting '+setting+' to '+value+' : '+er);
+      deferred.reject(er);
+    }else{
+      deferred.resolve();
+    }
+  });
+
+  return deferred.promise;
+};
 
 var gphotoLiveView = function gphotoLiveView() {
 	camera.takePicture({
@@ -116,6 +149,7 @@ var gphotoLiveView = function gphotoLiveView() {
 };
 
 var gphotoCapture = function gphotoCapture(dontSend) {
+  var deferred = Q.defer();
   setCameraStorage(camera,1).then(
     function(){
       tlObject.startPhoto = Date.now();
@@ -141,10 +175,12 @@ var gphotoCapture = function gphotoCapture(dontSend) {
           if(tlObject.running){
             timelapseStep();
           }
+          deferred.resolve();
   			}
   		});
     }
   );
+  return deferred.promise;
 };
 
 function timelapseStep() {
