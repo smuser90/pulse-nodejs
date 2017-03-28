@@ -106,7 +106,7 @@ var hdrPhoto = function(photos){
     console.log("Shutter is: "+camSettings.capturesettings.children.shutterspeed2.value);
     setCameraSetting('shutterspeed2', camSettings.capturesettings.children.shutterspeed2.choices[camSettings.capturesettings.children.shutterspeed2.choices.indexOf(camSettings.capturesettings.children.shutterspeed2.value)+1]).then(
       function(){
-        gphotoCapture(true).then(function(){
+        gphotoCapture().then(function(){
           getCameraSettings().then(
             function(){
               hdrPhoto(photos-1);
@@ -116,6 +116,26 @@ var hdrPhoto = function(photos){
       }
     );
   }
+};
+
+var downloadImage = function(source, destination){
+  var deferred = Q.defer();
+  camera.downloadPicture(
+    {
+      cameraPath: source,
+      targetPath: destination ? destination : './tmp/foo.XXXXXX'
+    },
+    function(er, fileString){
+      if(er){
+        console.log('Error saving photo to PPro: '+er);
+        deferred.reject(er);
+      }else{
+        deferred.resolve(fileString);
+      }
+    }
+  );
+
+  return deferred.promise;
 };
 
 
@@ -148,24 +168,17 @@ var gphotoLiveView = function gphotoLiveView() {
   });
 };
 
-var gphotoCapture = function gphotoCapture(dontSend) {
+var gphotoCapture = function gphotoCapture() {
   var deferred = Q.defer();
-  setCameraStorage(camera,1).then(
-    function(){
       tlObject.startPhoto = Date.now();
       camera.takePicture({
   			download: false
-  			// targetPath: '/foo.XXXXXX'
   		}, function(er, tmpname) {
   			if (er) {
   				console.log("Capture error: " + er);
-          gphotoCapture(dontSend);
+          gphotoCapture();
   			} else {
   				console.log("Storage Location: " + tmpname);
-  				//  buffer = fs.readFileSync(tmpname);
-  				if (!dontSend) {
-  					sendPhoto(0);
-  				}
           tlObject.endPhoto = Date.now();
   				tlObject.photos--;
           if (tlObject.photos === 0) {
@@ -178,8 +191,7 @@ var gphotoCapture = function gphotoCapture(dontSend) {
           deferred.resolve();
   			}
   		});
-    }
-  );
+
   return deferred.promise;
 };
 
@@ -195,7 +207,7 @@ function timelapseStep() {
 	setTimeout(function() {
 		console.log("Stepping TL... " + tlObject.photos);
     lastTLStep = Date.now();
-		gphotoCapture(true);
+		gphotoCapture();
 	}, waitTime);
 }
 
@@ -220,11 +232,10 @@ socket.on('timelapse', function(tl) {
 	}
 	console.log("Received timelapse packet!");
 	console.dir(tl);
-	gphotoCapture(true);
+	gphotoCapture();
 });
 
 var sendPhoto = function(packet) {
-	// console.log(Date.now()+": Pushing photo...");
 	var fileData = buffer;
 	var packets = Math.floor(fileData.length / CHUNK_SIZE);
 	if (fileData.length % CHUNK_SIZE) {
@@ -262,7 +273,9 @@ fs.stat(socketPath, function(err) {
 	unixServer.listen(socketPath, function(err, path) {
 		if (!err) {
 			console.log("IPC Server started!");
-		}
+		}else{
+      console.log("Error starting IPC Server!");
+    }
 	});
 });
 
