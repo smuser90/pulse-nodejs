@@ -27,7 +27,14 @@ var tlObject = {
 	photos: 5,
   running: false,
   startPhoto: Date.now(),
-  endPhoto: Date.now()
+  endPhoto: Date.now(),
+  tlDirectory: './'
+};
+
+var hdrObject = {
+  evPerStep: 1,
+  steps: 5,
+  currentStep: 1
 };
 
 var app = require('express')();
@@ -95,16 +102,21 @@ var getCameraSettings = function(){
 getCamera().then(function(cam) {
 	setCameraStorage(cam, 1);
   getCameraSettings().then(function(){
-    hdrPhoto(5);
+    hdrPhoto(hdrObject.steps);
   });
 });
 
 var camSettings;
 var hdrPhoto = function(photos){
   console.log("HDR Photo: "+photos);
+  var shutterSettings = camSettings.capturesettings.children.shutterspeed2.choices;
+  var currentShutter = camSettings.capturesettings.children.shutterspeed2.value;
   if(photos > 0){
-    console.log("Shutter is: "+camSettings.capturesettings.children.shutterspeed2.value);
-    setCameraSetting('shutterspeed2', camSettings.capturesettings.children.shutterspeed2.choices[camSettings.capturesettings.children.shutterspeed2.choices.indexOf(camSettings.capturesettings.children.shutterspeed2.value)+1]).then(
+    console.log("Shutter is: "+currentShutter);
+    var ev = calculateEV(shutterSettings);
+    var indexStep = hdrObject.evPerStep / ev;
+
+    setCameraSetting('shutterspeed2', shutterSettings[shutterSettings.indexOf(currentShutter)+indexStep]).then(
       function(){
         gphotoCapture().then(function(){
           getCameraSettings().then(
@@ -118,12 +130,22 @@ var hdrPhoto = function(photos){
   }
 };
 
+var calculateEV = function(shutterSettings){
+  var firstIndex = shutterSettings.indexOf("30");
+  var secondIndex = shutterSettings.indexOf("15");
+  var steps;
+  if(firstIndex > secondIndex){ steps = firstIndex - secondIndex; }
+  else{ steps = secondIndex - firstIndex; }
+
+  return 1 / steps;
+};
+
 var downloadImage = function(source, destination){
   var deferred = Q.defer();
   camera.downloadPicture(
     {
       cameraPath: source,
-      targetPath: destination ? destination : './tmp/foo.XXXXXX'
+      targetPath: destination ? destination : '/tmp/foo.XXXXXX'
     },
     function(er, fileString){
       if(er){
@@ -188,7 +210,7 @@ var gphotoCapture = function gphotoCapture() {
           if(tlObject.running){
             timelapseStep();
           }
-          deferred.resolve();
+          deferred.resolve(tmpname);
   			}
   		});
 
@@ -206,8 +228,9 @@ function timelapseStep() {
   }
 	setTimeout(function() {
 		console.log("Stepping TL... " + tlObject.photos);
-    lastTLStep = Date.now();
-		gphotoCapture();
+		gphotoCapture().then(function(photoPath){
+      downloadImage(photoPath, tlObject.tlDirectory+'/'+tlObject.photos);
+    });
 	}, waitTime);
 }
 
@@ -225,6 +248,12 @@ socket.on('live-view-frame', function() {
 });
 
 socket.on('timelapse', function(tl) {
+  tlObject.tlDirectory = './timelapse'+Date.now();
+
+  if(!fs.existsSync(tlObject.tlDirectory)){
+    fs.mkdirSync(tlObject.tlDirectory);
+  }
+
 	if (tl && tl.interval) {
 		tlObject.interval = tl.interval;
 		tlObject.photos = tl.photos;
