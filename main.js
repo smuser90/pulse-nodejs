@@ -99,13 +99,6 @@ var getCameraSettings = function(){
   return deferred.promise;
 };
 
-getCamera().then(function(cam) {
-	setCameraStorage(cam, 1);
-  getCameraSettings().then(function(){
-    hdrPhoto(hdrObject.steps);
-  });
-});
-
 var camSettings;
 var hdrPhoto = function(photos){
   console.log("HDR Photo: "+photos);
@@ -309,3 +302,12 @@ fs.stat(socketPath, function(err) {
 });
 
 console.log("Init complete. Running...");
+getCamera().then(function(cam) {
+	setCameraStorage(cam, 1).then(
+    function(){
+      getCameraSettings().then(function(){
+        hdrPhoto(hdrObject.steps);
+      });
+    });
+  }
+);
