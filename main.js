@@ -255,7 +255,7 @@ function timelapseStep() {
       function(photoPath){
         downloadImage(photoPath, tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'.jpg').then(
           function(finalPath){
-            downres(finalPath, 10);
+            downsize(finalPath, 10);
           }
         );
       }
