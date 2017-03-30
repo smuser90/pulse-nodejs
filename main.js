@@ -221,7 +221,8 @@ function timelapseStep() {
   }
 	setTimeout(function() {
 		console.log("Stepping TL... " + tlObject.photos);
-		gphotoCapture().then(function(photoPath){
+		gphotoCapture().then(
+    function(photoPath){
       downloadImage(photoPath, tlObject.tlDirectory+'/'+tlObject.photos);
     });
 	}, waitTime);
