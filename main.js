@@ -192,7 +192,7 @@ var gphotoCapture = function gphotoCapture() {
       tlObject.startPhoto = Date.now();
       camera.takePicture({
   			download: tlObject.running,
-        targetPath: tlObject.tlDirectory+'/'+(tlObject.total - tlObject.photos)+'.jpg'
+        targetPath: '/foo.XXXXXX'//tlObject.tlDirectory+'/'+(tlObject.total - tlObject.photos)+'.jpg'
   		}, function(er, tmpname) {
   			if (er) {
   				console.log("Capture error: " + er);
