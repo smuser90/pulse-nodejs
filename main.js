@@ -187,10 +187,12 @@ var gphotoLiveView = function gphotoLiveView() {
 };
 
 var gphotoCapture = function gphotoCapture() {
+  console.log("Capturing Photo");
   var deferred = Q.defer();
       tlObject.startPhoto = Date.now();
       camera.takePicture({
-  			download: false
+  			download: tlObject.running,
+        targetPath: tlObject.tlDirectory+'/'+(tlObject.total - tlObject.photos)+'.jpg'
   		}, function(er, tmpname) {
   			if (er) {
   				console.log("Capture error: " + er);
@@ -203,10 +205,12 @@ var gphotoCapture = function gphotoCapture() {
       			tlObject.running = false;
             console.log("Timelapse complete!      :D");
       		}
+
+          deferred.resolve(tmpname);
+
           if(tlObject.running){
             timelapseStep();
           }
-          deferred.resolve(tmpname);
   			}
   		});
 
@@ -224,10 +228,7 @@ function timelapseStep() {
   }
 	setTimeout(function() {
 		console.log("Stepping TL... " + tlObject.photos);
-		gphotoCapture().then(
-    function(photoPath){
-      downloadImage(photoPath, tlObject.tlDirectory+'/'+(tlObject.total - tlObject.photos)+'.jpg');
-    });
+		gphotoCapture();
 	}, waitTime);
 }
 
