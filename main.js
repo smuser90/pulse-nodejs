@@ -201,12 +201,12 @@ var gphotoLiveView = function gphotoLiveView() {
 		preview: true,
 		targetPath: '/foo.XXXXXX'
 	}, function (er, tmpname) {
-  if(er){
-    gphotoLiveView();
-  }else{
-    frameResponse.send(fs.readFileSync(tmpname));
-    fs.unlinkSync(tmpname);
-  }
+    if(er){
+      gphotoLiveView();
+    }else{
+      frameResponse.send(fs.readFileSync(tmpname));
+      fs.unlinkSync(tmpname);
+    }
   });
 };
 
@@ -215,6 +215,7 @@ var gphotoCapture = function gphotoCapture() {
   var deferred = Q.defer();
       tlObject.startPhoto = Date.now();
       camera.takePicture({
+        download: true,
   			targetPath: '/foo.XXXXXX'
   		}, function(er, tmpname) {
   			if (er) {
