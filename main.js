@@ -307,7 +307,7 @@ getCamera().then(function(cam) {
 	setCameraStorage(cam, 1).then(
     function(){
       getCameraSettings().then(function(){
-        hdrPhoto(hdrObject.steps);
+        // hdrPhoto(hdrObject.steps);
       });
     });
   }
