@@ -26,6 +26,7 @@ var start, end;
 var tlObject = {
 	interval: 1000, // ms
 	photos: 5,
+  total: 5,
   running: false,
   startPhoto: Date.now(),
   endPhoto: Date.now(),
@@ -225,7 +226,7 @@ function timelapseStep() {
 		console.log("Stepping TL... " + tlObject.photos);
 		gphotoCapture().then(
     function(photoPath){
-      downloadImage(photoPath, tlObject.tlDirectory+'/'+tlObject.photos);
+      downloadImage(photoPath, tlObject.tlDirectory+'/'+(tlObject.total - tlObject.photos)+'.jpg');
     });
 	}, waitTime);
 }
@@ -253,6 +254,7 @@ socket.on('timelapse', function(tl) {
 	if (tl && tl.interval) {
 		tlObject.interval = tl.interval;
 		tlObject.photos = tl.photos;
+    tlObject.total = tl.photos;
     tlObject.running = true;
 	}
 	console.log("Received timelapse packet!");
