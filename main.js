@@ -1,6 +1,10 @@
 console.log("* Pulse Pro Startup *");
 
 var mv = require('mv');
+var epeg = require('epeg');
+
+var imageSize = require('image-size');
+
 var spawn = require('child_process').spawn;
 var Q = require('q');
 var ss = require('socket.io-stream');
@@ -87,6 +91,16 @@ var setCameraStorage = function(cam, storage) {
 		}
 	});
 	return deferred.promise;
+};
+
+var downsize = function(imagePath, factor){
+  var dimensions = imageSize(imagePath);
+  console.log("Downsizing image "+imagePath+"\n"+"Image Size: "+dimensions.width+' x '+dimensions.height);
+  var image = new epeg.Image({path: imagePath});
+  var downres = image.downsize(dimensions.width / factor, dimensions.height / factor, 85);
+  fs.unlinkSync(imagePath);
+  downres.saveTo(imagePath);
+  console.log("Finished downsize");
 };
 
 var getCameraSettings = function(){
@@ -239,7 +253,11 @@ function timelapseStep() {
 		console.log("Stepping TL... " + tlObject.photos);
 		gphotoCapture().then(
       function(photoPath){
-        downloadImage(photoPath, tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'.jpg');
+        downloadImage(photoPath, tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'.jpg').then(
+          function(finalPath){
+            downres(finalPath, 10);
+          }
+        );
       }
     );
 	}, waitTime);
