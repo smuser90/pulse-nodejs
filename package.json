@@ -20,7 +20,7 @@
     "epeg": "^0.7.0",
     "express": "^4.14.0",
     "file-system": "^2.2.1",
-    "gphoto2": "smuser90/node-gphoto2",
+     "gphoto2": "elijahparker/node-gphoto2",
     "http": "0.0.0",
     "image-size": "^0.5.1",
     "mv": "^2.1.1",
