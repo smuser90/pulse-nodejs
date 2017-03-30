@@ -33,6 +33,7 @@ var filename = 'photo.jpg';
 
 var start, end;
 var compressionFactor = 10;
+var compressionFactorTL = 10;
 
 
 var tlObject = {
@@ -78,6 +79,14 @@ app.get('/capture', function(req, res){
       }
     );
   });
+});
+
+app.get('/file', function(req, res){
+  console.dir(req.query);
+});
+
+app.get('/cameraFile', function(req, res){
+  console.dir(req.query);
 });
 
 var tlFrameResponse;
@@ -294,7 +303,7 @@ function timelapseStep(first) {
         var destination = tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'.jpg';
         downloadImage(photoPath, destination).then(
           function(){
-            downsize(destination, compressionFactor);
+            downsize(destination, compressionFactorTL);
             fs.writeFile(tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'-meta.txt', JSON.stringify(metaData));
             if(tlObject.running){
               tlObject.endPhoto = Date.now();
@@ -355,6 +364,11 @@ socket.on('live-view-frame', function() {
 socket.on('compression-factor', function(cf){
   console.log("Compression factor updated to: "+cf);
   compressionFactor = cf;
+});
+
+socket.on('compression-factor-tl', function(cf){
+  console.log("TL compression factor updated to: "+cf);
+  compressionFactorTL = cf;
 });
 
 socket.on('hdr', function(hdr) {
