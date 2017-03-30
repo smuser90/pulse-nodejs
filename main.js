@@ -216,6 +216,7 @@ var gphotoCapture = function gphotoCapture() {
       tlObject.startPhoto = Date.now();
       camera.takePicture({
         download: true,
+        keepOnCamera: true,
   			targetPath: '/foo.XXXXXX'
   		}, function(er, tmpname) {
   			if (er) {
