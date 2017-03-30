@@ -141,14 +141,21 @@ var downloadImage = function(source, destination){
   camera.downloadPicture(
     {
       cameraPath: source,
-      targetPath: destination ? destination : '/tmp/foo.XXXXXX'
+      targetPath: '/tmp/foo.XXXXXX'
     },
     function(er, fileString){
       if(er){
         console.log('Error saving photo to PPro: '+er);
         deferred.reject(er);
       }else{
-        deferred.resolve(fileString);
+        fs.rename(fileString, destination, function(err){
+          if(err){
+            deferred.reject();
+          }else{
+            deferred.resolve(destination);
+          }
+        });
+
       }
     }
   );
