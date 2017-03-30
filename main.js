@@ -215,7 +215,7 @@ var gphotoCapture = function gphotoCapture() {
   var deferred = Q.defer();
       tlObject.startPhoto = Date.now();
       camera.takePicture({
-  			download: false
+  			targetPath: '/foo.XXXXXX'
   		}, function(er, tmpname) {
   			if (er) {
   				console.log("Capture error: " + er);
@@ -253,9 +253,9 @@ function timelapseStep(first) {
 		console.log("Stepping TL... " + tlObject.photos);
 		gphotoCapture().then(
       function(photoPath){
-        downloadImage(photoPath, tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'.jpg').then(
-          function(finalPath){
-            downsize(finalPath, 10);
+        var destination = tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'.jpg';
+        mv(photoPath, destination, function(){
+            downsize(destination, 10);
           }
         );
       }
