@@ -191,8 +191,7 @@ var gphotoCapture = function gphotoCapture() {
   var deferred = Q.defer();
       tlObject.startPhoto = Date.now();
       camera.takePicture({
-  			download: tlObject.running,
-        targetPath: '/foo.XXXXXX'//tlObject.tlDirectory+'/'+(tlObject.total - tlObject.photos)+'.jpg'
+  			download: false
   		}, function(er, tmpname) {
   			if (er) {
   				console.log("Capture error: " + er);
@@ -228,7 +227,11 @@ function timelapseStep() {
   }
 	setTimeout(function() {
 		console.log("Stepping TL... " + tlObject.photos);
-		gphotoCapture();
+		gphotoCapture().then(
+      function(photoPath){
+        downloadImage(photoPath, tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'.jpg');
+      }
+    );
 	}, waitTime);
 }
 
@@ -246,7 +249,7 @@ socket.on('live-view-frame', function() {
 });
 
 socket.on('timelapse', function(tl) {
-  tlObject.tlDirectory = './timelapses/tl'+Date.now();
+  tlObject.tlDirectory = __dirname+'/timelapses/tl'+Date.now();
 
   if(!fs.existsSync(tlObject.tlDirectory)){
     fs.mkdirSync(tlObject.tlDirectory);
