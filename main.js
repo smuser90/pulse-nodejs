@@ -1,5 +1,6 @@
 console.log("* Pulse Pro Startup *");
 
+var mv = require('mv');
 var spawn = require('child_process').spawn;
 var Q = require('q');
 var ss = require('socket.io-stream');
@@ -148,9 +149,9 @@ var downloadImage = function(source, destination){
         console.log('Error saving photo to PPro: '+er);
         deferred.reject(er);
       }else{
-        fs.rename(fileString, destination, function(err){
+        mv(fileString, destination, function(err){
           if(err){
-            console.log("Error renaming file: "+err);
+            console.log("Error moving file: "+err);
             deferred.reject();
           }else{
             console.log(fileString + " succesfully moved to " + destination);
