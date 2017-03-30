@@ -150,8 +150,10 @@ var downloadImage = function(source, destination){
       }else{
         fs.rename(fileString, destination, function(err){
           if(err){
+            console.log("Error renaming file: "+err);
             deferred.reject();
           }else{
+            console.log(fileString + " succesfully moved to " + destination);
             deferred.resolve(destination);
           }
         });
