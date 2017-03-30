@@ -240,10 +240,10 @@ var gphotoCapture = function gphotoCapture() {
   return deferred.promise;
 };
 
-function timelapseStep() {
+function timelapseStep(first) {
   var waitTime;
   var elapsed = tlObject.endPhoto - tlObject.startPhoto;
-  if(elapsed > tlObject.interval){
+  if(elapsed > tlObject.interval || first){
     waitTime = 1; // It's go time;
   }else{
     waitTime = tlObject.interval - elapsed;
@@ -291,7 +291,7 @@ socket.on('timelapse', function(tl) {
 	}
 	console.log("Received timelapse packet!");
 	console.dir(tl);
-	gphotoCapture();
+	timelapseStep(true);
 });
 
 var sendPhoto = function(packet) {
