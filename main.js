@@ -136,6 +136,7 @@ var calculateEV = function(shutterSettings){
 
 var downloadImage = function(source, destination){
   var deferred = Q.defer();
+  console.log("Downloading Image from camera: "+source+ " to destination: " + destination);
   camera.downloadPicture(
     {
       cameraPath: source,
@@ -243,7 +244,7 @@ socket.on('live-view-frame', function() {
 });
 
 socket.on('timelapse', function(tl) {
-  tlObject.tlDirectory = './timelapse'+Date.now();
+  tlObject.tlDirectory = './timelapses/tl'+Date.now();
 
   if(!fs.existsSync(tlObject.tlDirectory)){
     fs.mkdirSync(tlObject.tlDirectory);
@@ -302,6 +303,10 @@ fs.stat(socketPath, function(err) {
     }
 	});
 });
+
+if(!fs.existsSync('./timelapses')){
+  fs.mkdirSync('./timelapses');
+}
 
 console.log("Init complete. Running...");
 getCamera().then(function(cam) {
