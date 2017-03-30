@@ -17,7 +17,8 @@ var net = require('net');
 var camera;
 var buffer;
 
-var socket = require('socket.io-client')('http://192.168.1.11:1025');
+// var socket = require('socket.io-client')('http://192.168.1.11:1025');
+var socket = require('socket.io-client')('http://10.1.10.124:1025');
 var filename = 'photo.jpg';
 
 var start, end;
