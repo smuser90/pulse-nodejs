@@ -61,6 +61,16 @@ app.get('/capture', function(req, res){
 
 });
 
+var tlFrameResponse;
+var tlFrameIndex = 1;
+app.get('/tlPreview', function(req, res){
+  res.send(fs.readFileSync(tlObject.tlDirectory+'/'+tlFrameIndex+'.jpg'));
+  tlFrameIndex++;
+  if(tlFrameIndex > tlObject.total){
+    tlFrameIndex = 1;
+  }
+});
+
 app.listen(80, function() {
 	console.log('http stream server is running on port 80');
 });
