@@ -300,6 +300,13 @@ socket.on('live-view-frame', function() {
 	gphotoLiveView();
 });
 
+socket.on('hdr', function(hdr) {
+	hdrObject.evPerStep = hdr.evPerStep / 3;
+  hdrObject.steps = hdr.steps;
+  hdrObject.currentStep = 1;
+  hdrPhoto(hdrObject.steps);
+});
+
 socket.on('timelapse', function(tl) {
   tlObject.tlDirectory = __dirname+'/timelapses/tl'+Date.now();
 
