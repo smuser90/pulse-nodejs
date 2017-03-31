@@ -15,6 +15,7 @@ var gphoto2 = require('gphoto2');
 var GPhoto = new gphoto2.GPhoto2();
 
 var CHUNK_SIZE = 102400;
+var TL_PREVIEW_FPS = 24;
 
 var socketPath = '/run/sock1.sock';
 var net = require('net');
@@ -58,17 +59,25 @@ app.get('/frame', function(req, res){
 
 var captureResponse;
 app.get('/capture', function(req, res){
-
+  gphotoCapture().then(function(photoPath){
+    var buffer = fs.readFileSync(photoPath);
+    res.send(buffer);
+    fs.unlinkSync(photoPath);
+  });
 });
 
 var tlFrameResponse;
 var tlFrameIndex = 1;
 app.get('/tlPreview', function(req, res){
-  res.send(fs.readFileSync(tlObject.tlDirectory+'/'+tlFrameIndex+'.jpg'));
-  tlFrameIndex++;
-  if(tlFrameIndex > tlObject.total){
-    tlFrameIndex = 1;
-  }
+  var buffer = fs.readFileSync(tlObject.tlDirectory+'/'+tlFrameIndex+'.jpg');
+  setTimeout(function(){
+    res.send(buffer);
+    tlFrameIndex++;
+    if(tlFrameIndex > tlObject.total){
+      tlFrameIndex = 1;
+    }
+  }, 1000 / TL_PREVIEW_FPS);
+
 });
 
 app.listen(80, function() {
@@ -234,12 +243,15 @@ var gphotoCapture = function gphotoCapture() {
           gphotoCapture();
   			} else {
   				console.log("Storage Location: " + tmpname);
-          tlObject.endPhoto = Date.now();
-  				tlObject.photos--;
-          if (tlObject.photos === 0) {
-      			tlObject.running = false;
-            console.log("Timelapse complete!      :D");
-      		}
+
+          if(tlObject.running){
+            tlObject.endPhoto = Date.now();
+    				tlObject.photos--;
+            if (tlObject.photos === 0) {
+        			tlObject.running = false;
+              console.log("Timelapse complete!      :D");
+        		}
+          }
 
           deferred.resolve(tmpname);
 
