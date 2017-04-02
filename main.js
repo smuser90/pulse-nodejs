@@ -65,16 +65,30 @@ app.get('/frame', function(req, res){
 });
 
 app.get('/list', function(req, res){
-  Gphoto = undefined;
-  camera = undefined;
+  if(camera){
+    camera.close();
+    console.log('Closed camera connection');
+    camera = undefined;
+  }
+
+  var output = '';
   fileList = spawn('gphoto2', ['--list-files']);
 
   fileList.stdout.on('data', function(data){
-    console.log('gphoto2 spawn: '+data);
+    console.log('gphoto2 stdout: '+data);
+    output += data;
+  });
+
+  fileList.stderr.on('data', function(data){
+    console.log('gphoto2 stderr: '+data);
+    output += data;
   });
 
   fileList.on('close', function (code){
     console.log('gphoto2 process exited with code ' + code);
+    res.send(output);
+    fileList = undefined; // garbage collect me plz
+    gphotoInit();
   });
 });
 
@@ -474,9 +488,6 @@ if(!fs.existsSync('./timelapses')){
   fs.mkdirSync('./timelapses');
 }
 
-console.log("Init complete. Running...");
-gphotoInit();
-
 var gphotoInit = function(){
   GPhoto = undefined;
   GPhoto = new gphoto2.GPhoto2();
@@ -490,3 +501,6 @@ var gphotoInit = function(){
     }
   );
 };
+
+console.log("Init complete. Running...");
+gphotoInit();
