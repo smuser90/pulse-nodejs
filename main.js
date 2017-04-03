@@ -104,6 +104,7 @@ var setCameraStorage = function(cam, storage) {
 	console.log('Setting camera storage to ' + storage);
 	cam.setConfigValue('capturetarget', storage, function(er) {
 		if (er) {
+      console.log('Error setting camera storage: '+er);
 			deferred.reject(er);
 		} else {
 			deferred.resolve();
