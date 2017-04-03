@@ -296,6 +296,28 @@ socket.on('capture-photo', function() {
 	gphotoCapture();
 });
 
+socket.on('get-configs', function() {
+  camera.getConfig(
+    function(er, settings){
+      if(!er){
+        socket.emit('send-configs', settings);
+      }else{
+        console.log("Error getting configs: "+settings);
+      }
+    }
+  );
+});
+
+socket.on('set-config', function(config, value){
+  camera.setConfigValue(config, value, function(er){
+    if(er){
+      console.log('Error setting '+config+' to '+value+' : '+er);
+    }else{
+      socket.emit('ack-config', {config: config, value: value});
+    }
+  });
+});
+
 socket.on('live-view-frame', function() {
 	gphotoLiveView();
 });
