@@ -227,7 +227,8 @@ var gphotoLiveView = function gphotoLiveView() {
     if(er){
       gphotoLiveView();
     }else{
-      frameResponse.send(downsize(tmpname, compressionFactor));
+      downsize(tmpname, compressionFactor);
+      frameResponse.send(fs.readFileSync(tmpname));
       fs.unlinkSync(tmpname);
     }
   });
