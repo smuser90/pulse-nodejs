@@ -310,6 +310,7 @@ socket.on('get-configs', function() {
 });
 
 socket.on('set-config', function(config, value){
+  console.log("Rx'd set config: "+config+' '+value);
   camera.setConfigValue(config, value, function(er){
     if(er){
       console.log('Error setting '+config+' to '+value+' : '+er);
