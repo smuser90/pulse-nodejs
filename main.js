@@ -62,11 +62,9 @@ app.get('/frame', function(req, res){
 var captureResponse;
 app.get('/capture', function(req, res){
   gphotoCapture().then(function(photoPath){
-    downsize(photoPath, compressionFactor).then(function(){
-      var buffer = fs.readFileSync(photoPath);
-      res.send(buffer);
-      fs.unlinkSync(photoPath);
-    });
+    var buffer = downsize(photoPath, compressionFactor);
+    res.send(buffer);
+    fs.unlinkSync(photoPath);
   });
 });
 
@@ -118,7 +116,6 @@ var setCameraStorage = function(cam, storage) {
 };
 
 var downsize = function(imagePath, factor){
-  var deferred = Q.defer();
   var dimensions = imageSize(imagePath);
   console.log("Downsizing image "+imagePath+"\n"+"Image Size: "+dimensions.width+' x '+dimensions.height);
   var image = new epeg.Image({path: imagePath});
@@ -126,7 +123,7 @@ var downsize = function(imagePath, factor){
   fs.unlinkSync(imagePath);
   downres.saveTo(imagePath);
   console.log("Finished downsize");
-  deferred.resolve(imagePath);
+  return downres;
 };
 
 var getCameraSettings = function(){
@@ -230,7 +227,7 @@ var gphotoLiveView = function gphotoLiveView() {
     if(er){
       gphotoLiveView();
     }else{
-      frameResponse.send(fs.readFileSync(tmpname));
+      frameResponse.send(downsize(tmpname, compressionFactor));
       fs.unlinkSync(tmpname);
     }
   });
