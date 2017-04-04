@@ -62,7 +62,12 @@ app.get('/frame', function(req, res){
 var captureResponse;
 app.get('/capture', function(req, res){
   gphotoCapture().then(function(photoPath){
-    var buffer = downsize(photoPath, compressionFactor);
+    var buffer;
+    if(compressionFactor > 1){
+      buffer = downsize(photoPath, compressionFactor);
+    }else{
+      buffer = fs.readFileSync(photoPath);
+    }
     res.send(buffer);
     fs.unlinkSync(photoPath);
   });
@@ -227,7 +232,9 @@ var gphotoLiveView = function gphotoLiveView() {
     if(er){
       gphotoLiveView();
     }else{
-      downsize(tmpname, compressionFactor);
+      if(compressionFactor > 1){
+        downsize(tmpname, compressionFactor);
+      }
       frameResponse.send(fs.readFileSync(tmpname));
       fs.unlinkSync(tmpname);
     }
