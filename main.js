@@ -28,6 +28,8 @@ var socket = require('socket.io-client')('http://10.1.10.124:1025');
 var filename = 'photo.jpg';
 
 var start, end;
+var compressionFactor = 10;
+
 
 var tlObject = {
 	interval: 1000, // ms
@@ -60,9 +62,11 @@ app.get('/frame', function(req, res){
 var captureResponse;
 app.get('/capture', function(req, res){
   gphotoCapture().then(function(photoPath){
-    var buffer = fs.readFileSync(photoPath);
-    res.send(buffer);
-    fs.unlinkSync(photoPath);
+    downsize(photoPath, compressionFactor).then(function(){
+      var buffer = fs.readFileSync(photoPath);
+      res.send(buffer);
+      fs.unlinkSync(photoPath);
+    });
   });
 });
 
@@ -114,6 +118,7 @@ var setCameraStorage = function(cam, storage) {
 };
 
 var downsize = function(imagePath, factor){
+  var deferred = Q.defer();
   var dimensions = imageSize(imagePath);
   console.log("Downsizing image "+imagePath+"\n"+"Image Size: "+dimensions.width+' x '+dimensions.height);
   var image = new epeg.Image({path: imagePath});
@@ -121,6 +126,7 @@ var downsize = function(imagePath, factor){
   fs.unlinkSync(imagePath);
   downres.saveTo(imagePath);
   console.log("Finished downsize");
+  deferred.resolve(imagePath);
 };
 
 var getCameraSettings = function(){
@@ -280,7 +286,7 @@ function timelapseStep(first) {
       function(photoPath){
         var destination = tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'.jpg';
         mv(photoPath, destination, function(){
-            downsize(destination, 10);
+            downsize(destination, compressionFactor);
           }
         );
       }
@@ -322,6 +328,11 @@ socket.on('set-config', function(config, value){
 
 socket.on('live-view-frame', function() {
 	gphotoLiveView();
+});
+
+socket.on('compression-factor', function(cf){
+  console.log("Compression factor updated to: "+cf);
+  compressionFactor = cf;
 });
 
 socket.on('hdr', function(hdr) {
