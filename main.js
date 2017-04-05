@@ -1,5 +1,9 @@
 console.log("* Pulse Pro Startup *");
 
+process.on('uncaughtException', function (error) {
+    console.log("Uncaught Exception: "+error);
+});
+
 var mv = require('mv');
 var epeg = require('epeg');
 
