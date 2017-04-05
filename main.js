@@ -66,7 +66,9 @@ app.get('/frame', function(req, res){
 var captureResponse;
 app.get('/capture', function(req, res){
   gphotoCapture().then(function(photoPath){
-    downsize(photoPath, compressionFactor);
+    if(compressionFactor > 1){
+      downsize(photoPath, compressionFactor);
+    }
     var buffer = fs.readFileSync(photoPath);
     res.send(buffer);
     fs.unlinkSync(photoPath);
