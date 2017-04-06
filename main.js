@@ -186,6 +186,7 @@ var downloadImage = function(source, destination){
   camera.downloadPicture(
     {
       cameraPath: source,
+      keepOnCamera: true,
       targetPath: '/tmp/foo.XXXXXX'
     },
     function(er, fileString){
