@@ -264,20 +264,11 @@ var gphotoCapture = function gphotoCapture() {
   			} else {
   				console.log("Storage Location: " + tmpname);
 
-          if(tlObject.running){
-            tlObject.endPhoto = Date.now();
-    				tlObject.photos--;
-            if (tlObject.photos === 0) {
-        			tlObject.running = false;
-              console.log("Timelapse complete!      :D");
-        		}
-          }
+
 
           deferred.resolve(tmpname);
 
-          if(tlObject.running){
-            timelapseStep();
-          }
+
   			}
   		});
 
@@ -305,6 +296,17 @@ function timelapseStep(first) {
           function(){
             downsize(destination, compressionFactor);
             fs.writeFile(tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'-meta.txt', JSON.stringify(metaData));
+            if(tlObject.running){
+              tlObject.endPhoto = Date.now();
+      				tlObject.photos--;
+              if (tlObject.photos === 0) {
+          			tlObject.running = false;
+                console.log("Timelapse complete!      :D");
+                return;
+          		}
+                timelapseStep();
+            }
+
           }
         );
       }
