@@ -299,12 +299,14 @@ function timelapseStep(first) {
             if(tlObject.running){
               tlObject.endPhoto = Date.now();
       				tlObject.photos--;
-              if (tlObject.photos === 0) {
+              if (tlObject.photos < 0) {
           			tlObject.running = false;
                 console.log("Timelapse complete!      :D");
-                return;
           		}
+
+              if(tlObject.running){
                 timelapseStep();
+              }
             }
 
           }
