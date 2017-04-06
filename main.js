@@ -66,12 +66,17 @@ app.get('/frame', function(req, res){
 var captureResponse;
 app.get('/capture', function(req, res){
   gphotoCapture().then(function(photoPath){
-    if(compressionFactor > 1){
-      downsize(photoPath, compressionFactor);
-    }
-    var buffer = fs.readFileSync(photoPath);
-    res.send(buffer);
-    fs.unlinkSync(photoPath);
+    var tmp = '/tmp/foo.'+Date.now();
+    downloadImage(photoPath, tmp).then(
+      function(){
+        if(compressionFactor > 1){
+          downsize(tmp, compressionFactor);
+        }
+        var buffer = fs.readFileSync(tmp);
+        res.send(buffer);
+        fs.unlinkSync(tmp);
+      }
+    );
   });
 });
 
