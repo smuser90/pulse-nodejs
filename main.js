@@ -303,6 +303,7 @@ function timelapseStep(first) {
         var destination = tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'.jpg';
         downloadImage(photoPath, destination).then(
           function(){
+            downsize(destination, compressionFactor);
             fs.writeFile(tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'-meta.txt', JSON.stringify(metaData));
           }
         );
