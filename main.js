@@ -82,11 +82,27 @@ app.get('/capture', function(req, res){
 });
 
 app.get('/file', function(req, res){
-  console.dir(req.query);
+  var path = req.query.path;
+  if(path){
+    res.send(fs.readFileSync(path));
+  }else{
+    res.send('Invalid Path');
+  }
 });
 
 app.get('/cameraFile', function(req, res){
-  console.dir(req.query);
+  var path = req.query.path;
+  if(path){
+    downloadImage(path, __dirname+'/tmpFile').then(
+      function(filePath){
+        res.send(fs.readFileSync(filePath));
+        fs.unlinkSync(filePath);
+      }
+    );
+  }else{
+    res.send('Invalid Path');
+  }
+
 });
 
 var tlFrameResponse;
