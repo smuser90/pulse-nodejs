@@ -81,6 +81,14 @@ app.get('/capture', function(req, res){
   });
 });
 
+app.get('/file', function(req, res){
+  console.dir(req.query);
+});
+
+app.get('/cameraFile', function(req, res){
+  console.dir(req.query);
+});
+
 var tlFrameResponse;
 var tlFrameIndex = 1;
 app.get('/tlPreview', function(req, res){
