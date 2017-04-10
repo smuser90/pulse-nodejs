@@ -16,7 +16,7 @@ var fs = require('fs');
 var stream = ss.createStream();
 
 var gphoto2 = require('gphoto2');
-var GPhoto = new gphoto2.GPhoto2();
+var GPhoto;
 
 var CHUNK_SIZE = 102400;
 var TL_PREVIEW_FPS = 24;
@@ -62,6 +62,20 @@ var frameResponse;
 app.get('/frame', function(req, res){
   frameResponse = res;
   gphotoLiveView();
+});
+
+app.get('/list', function(req, res){
+  Gphoto = undefined;
+  camera = undefined;
+  fileList = spawn('gphoto2', ['--list-files']);
+
+  fileList.stdout.on('data', function(data){
+    console.log('gphoto2 spawn: '+data);
+  });
+
+  fileList.on('close', function (code){
+    console.log('gphoto2 process exited with code ' + code);
+  });
 });
 
 var captureResponse;
@@ -461,12 +475,18 @@ if(!fs.existsSync('./timelapses')){
 }
 
 console.log("Init complete. Running...");
-getCamera().then(function(cam) {
-	setCameraStorage(cam, 1).then(
-    function(){
-      getCameraSettings().then(function(){
-        // hdrPhoto(hdrObject.steps);
+gphotoInit();
+
+var gphotoInit = function(){
+  GPhoto = undefined;
+  GPhoto = new gphoto2.GPhoto2();
+  getCamera().then(function(cam) {
+  	setCameraStorage(cam, 1).then(
+      function(){
+        getCameraSettings().then(function(){
+          // hdrPhoto(hdrObject.steps);
+        });
       });
-    });
-  }
-);
+    }
+  );
+};
