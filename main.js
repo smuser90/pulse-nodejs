@@ -490,6 +490,9 @@ fs.stat(socketPath, function(err) {
 
 if(!fs.existsSync('./timelapses')){
   fs.mkdirSync('./timelapses');
+}
+
+if(!fs.existsSync('/swap')){
   sysInit.sysInitSetup(Q, exec);
   sysInit.swapInit();
 }
