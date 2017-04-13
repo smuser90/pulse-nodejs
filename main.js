@@ -10,9 +10,13 @@ var epeg = require('epeg');
 var imageSize = require('image-size');
 
 var spawn = require('child_process').spawn;
+var exec = require('child_process').exec;
+
 var Q = require('q');
 var ss = require('socket.io-stream');
 var fs = require('fs');
+var sysInit = require('./sys_init');
+
 var stream = ss.createStream();
 
 var gphoto2 = require('gphoto2');
@@ -486,6 +490,8 @@ fs.stat(socketPath, function(err) {
 
 if(!fs.existsSync('./timelapses')){
   fs.mkdirSync('./timelapses');
+  sysInit.sysInitSetup(Q, exec);
+  sysInit.swapInit();
 }
 
 var gphotoInit = function(){
