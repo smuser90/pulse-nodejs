@@ -6,7 +6,7 @@
 #include <list>
 #include <map>
 #include <string>
-#include "binding.h"  // NOLINT
+#include "binding.h" // NOLINT
 #include "gphoto.h"  // NOLINT
 
 namespace cv = cvv8;
@@ -16,25 +16,29 @@ namespace cv = cvv8;
  * Initialize as A<Typename>::Tree etc.
  */
 
-template <typename T> class A {
- private:
+template<typename T>class A {
+private:
+
   A(void) {}
- public:
-  typedef std::map<std::string, T> Tree;
+
+public:
+
+  typedef std::map<std::string, T>Tree;
 };
 
 
 struct TreeNode {
-  CameraWidget* value;
-  GPContext *context;
+  CameraWidget     *value;
+  GPContext        *context;
   A<TreeNode>::Tree subtree;
-  TreeNode(CameraWidget* value, GPContext *context)
-      : value(value), context(context) {}
+  TreeNode(CameraWidget *value, GPContext *context)
+    : value(value), context(context) {}
+
   TreeNode() : value(NULL), context(NULL) {}
 };
 
-using namespace v8;  // NOLINT
-typedef std::list<std::string> StringList;
+using namespace v8; // NOLINT
+typedef std::list<std::string>StringList;
 
 static Persistent<String> camera_getConfig_symbol;
 static Persistent<String> camera_getConfigValue_symbol;
@@ -49,6 +53,7 @@ class GPCamera : public node::ObjectWrap {
   void lock() {
     uv_mutex_lock(&this->cameraMutex);
   }
+
   void unlock() {
     uv_mutex_unlock(&this->cameraMutex);
   }
@@ -57,93 +62,100 @@ class GPCamera : public node::ObjectWrap {
   std::string port_;
   Persistent<External> gphoto;
   GPhoto2 *gphoto_;
-  Camera *camera_;
+  Camera  *camera_;
   CameraWidget *config_;
   bool isOpen() {
     return this->camera_ ? true : false;
   }
 
   struct wait_event_request {
-    Persistent<Function> cb;
-    Camera *camera;
-    GPCamera *cameraObject;
-    GPContext *context;
-    std::string eventType;
-    std::string path;
-    int timeoutMs;
-    int ret;
+    Persistent<Function>cb;
+    Camera             *camera;
+    GPCamera           *cameraObject;
+    GPContext          *context;
+    std::string         eventType;
+    std::string         path;
+    int                 timeoutMs;
+    int                 ret;
   };
 
   struct take_picture_request {
-    Persistent<Function> cb;
-    Camera *camera;
-    GPCamera *cameraObject;
-    CameraFile *file;
-    GPContext *context;
-    const char *data;
-    unsigned long int length;  // NOLINT
-    int ret;
-    bool download;
-    bool preview;
-    bool keepOnCamera;
-    bool thumbnail;
-    std::string path;
-    std::string target_path;
-    std::string socket_path;
+    Persistent<Function>cb;
+    Camera             *camera;
+    GPCamera           *cameraObject;
+    CameraFile         *file;
+    GPContext          *context;
+    const char         *data;
+    unsigned long int   length; // NOLINT
+    int                 ret;
+    bool                download;
+    bool                preview;
+    bool                keepOnCamera;
+    bool                thumbnail;
+    std::string         path;
+    std::string         target_path;
+    std::string         socket_path;
   };
 
   struct get_config_request {
-    Persistent<Function> cb;
-    GPCamera  *cameraObject;
-    Camera    *camera;
-    GPContext *context;
-    CameraWidget *root;
-    int ret;
-    StringList keys;
-    A<TreeNode>::Tree settings;
+    Persistent<Function>cb;
+    GPCamera           *cameraObject;
+    Camera             *camera;
+    GPContext          *context;
+    CameraWidget       *root;
+    int                 ret;
+    StringList          keys;
+    A<TreeNode>::Tree   settings;
   };
 
   struct set_config_request {
-    Persistent<Function> cb;
-    GPCamera  *cameraObject;
-    Camera    *camera;
-    GPContext *context;
-    std::string key;
-    enum {String, Float, Integer} valueType;
-    float fltValue;
-    int intValue;
-    std::string strValue;
-    int ret;
+    Persistent<Function>            cb;
+    GPCamera                       *cameraObject;
+    Camera                         *camera;
+    GPContext                      *context;
+    std::string                     key;
+    enum { String, Float, Integer } valueType;
+    float                           fltValue;
+    int                             intValue;
+    std::string                     strValue;
+    int                             ret;
   };
 
-  static int enumConfig(get_config_request* req, CameraWidget *root,
-                        A<TreeNode>::Tree *tree);
-  static int getConfigWidget(get_config_request *req, std::string name,
-                             CameraWidget **child, CameraWidget **rootconfig);
-  static int setWidgetValue(set_config_request *req);
+  static int enumConfig(get_config_request *req,
+                        CameraWidget       *root,
+                        A<TreeNode>::Tree  *tree);
+  static int getConfigWidget(get_config_request *req,
+                             std::string         name,
+                             CameraWidget      **child,
+                             CameraWidget      **rootconfig);
+  static int  setWidgetValue(set_config_request *req);
   static void takePicture(take_picture_request *req);
   static void capturePreview(take_picture_request *req);
   static void downloadPicture(take_picture_request *req);
   static void waitEvent(wait_event_request *req);
-  static int getCameraFile(take_picture_request *req, CameraFile **file);
+  static int  getCameraFile(take_picture_request *req,
+                            CameraFile          **file);
 
-  bool close();
+  bool        close();
 
- public:
-  GPCamera(Handle<External> js_gphoto, std::string  model, std::string  port);
+public:
+
+  GPCamera(Handle<External>js_gphoto,
+           std::string     model,
+           std::string     port);
   ~GPCamera();
-  static Handle<Value> getWidgetValue(GPContext *context,
-                                      CameraWidget *widget);
+  static Handle<Value>getWidgetValue(GPContext    *context,
+                                     CameraWidget *widget);
   static Persistent<FunctionTemplate> constructor_template;
-  static void Initialize(Handle<Object> target);
-  static Handle<Value> New(const Arguments& args);
-  static Handle<Value> GetConfig(const Arguments& args);
-  static Handle<Value> GetConfigValue(const Arguments &args);
-  static Handle<Value> SetConfigValue(const Arguments &args);
-  static Handle<Value> TakePicture(const Arguments &args);
-  static Handle<Value> DownloadPicture(const Arguments& args);
-  static Handle<Value> Close(const Arguments& args);
-  static Handle<Value> WaitEvent(const Arguments &args);
+  static void         Initialize(Handle<Object>target);
+  static Handle<Value>New(const Arguments& args);
+  static Handle<Value>GetConfig(const Arguments& args);
+  static Handle<Value>GetConfigValue(const Arguments& args);
+  static Handle<Value>SetConfigValue(const Arguments& args);
+  static Handle<Value>TakePicture(const Arguments& args);
+  static Handle<Value>DownloadPicture(const Arguments& args);
+  static Handle<Value>Close(const Arguments& args);
+  static Handle<Value>WaitEvent(const Arguments& args);
   ASYNC_FN(Async_GetConfig);
   ASYNC_CB(Async_GetConfigCb);
   ASYNC_FN(Async_SetConfigValue);
@@ -156,13 +168,16 @@ class GPCamera : public node::ObjectWrap {
   std::string getPort() {
     return this->port_;
   }
+
   std::string getModel() {
     return this->model_;
   }
+
   void setCamera(Camera *camera) {
     this->camera_ = camera;
   }
+
   Camera* getCamera();
 };
 
-#endif  // SRC_CAMERA_H_
+#endif // SRC_CAMERA_H_
