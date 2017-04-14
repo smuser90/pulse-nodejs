@@ -22,7 +22,6 @@ var stream = ss.createStream();
 var gphoto2 = require('gphoto2');
 var GPhoto;
 
-var CHUNK_SIZE = 102400;
 var TL_PREVIEW_FPS = 24;
 
 var socketPath = '/run/sock1.sock';
@@ -38,7 +37,6 @@ var filename = 'photo.jpg';
 var start, end;
 var compressionFactor = 10;
 var compressionFactorTL = 10;
-
 
 var tlObject = {
 	interval: 1000, // ms
@@ -57,103 +55,8 @@ var hdrObject = {
 };
 
 var app = require('express')();
-
-app.get('/', function(req, res){
-  res.send('Hello Alpine!');
-});
-
-var frameResponse;
-app.get('/frame', function(req, res){
-  frameResponse = res;
-  gphotoLiveView();
-});
-
-app.get('/list', function(req, res){
-  if(camera){
-    camera.close();
-    console.log('Closed camera connection');
-    camera = undefined;
-  }
-
-  var output = '';
-  fileList = spawn('gphoto2', ['--list-files']);
-
-  fileList.stdout.on('data', function(data){
-    console.log('gphoto2 stdout: '+data);
-    output += data;
-  });
-
-  fileList.stderr.on('data', function(data){
-    console.log('gphoto2 stderr: '+data);
-    output += data;
-  });
-
-  fileList.on('close', function (code){
-    console.log('gphoto2 process exited with code ' + code);
-    res.send(output);
-    fileList = undefined; // garbage collect me plz
-    gphotoInit();
-  });
-});
-
-var captureResponse;
-app.get('/capture', function(req, res){
-  gphotoCapture().then(function(photoPath){
-    var tmp = '/tmp/foo.'+Date.now();
-    downloadImage(photoPath, tmp).then(
-      function(){
-        if(compressionFactor > 1){
-          downsize(tmp, compressionFactor);
-        }
-        var buffer = fs.readFileSync(tmp);
-        res.send(buffer);
-        fs.unlinkSync(tmp);
-      }
-    );
-  });
-});
-
-app.get('/file', function(req, res){
-  var path = req.query.path;
-  if(path){
-    res.send(fs.readFileSync(path));
-  }else{
-    res.send('Invalid Path');
-  }
-});
-
-app.get('/cameraFile', function(req, res){
-  var path = req.query.path;
-  if(path){
-    downloadImage(path, __dirname+'/tmpFile').then(
-      function(filePath){
-        res.send(fs.readFileSync(filePath));
-        fs.unlinkSync(filePath);
-      }
-    );
-  }else{
-    res.send('Invalid Path');
-  }
-
-});
-
-var tlFrameResponse;
-var tlFrameIndex = 1;
-app.get('/tlPreview', function(req, res){
-  var buffer = fs.readFileSync(tlObject.tlDirectory+'/'+tlFrameIndex+'.jpg');
-  setTimeout(function(){
-    res.send(buffer);
-    tlFrameIndex++;
-    if(tlFrameIndex > tlObject.total){
-      tlFrameIndex = 1;
-    }
-  }, 1000 / TL_PREVIEW_FPS);
-
-});
-
-app.listen(80, function() {
-	console.log('http stream server is running on port 80');
-});
+var routes = require('./expressRoutes');
+routes.initRoutes(app, fs, spawn, camera, gphotoLiveView, gphotoCapture, downloadImage, gphotoInit, downsize);
 
 var getCamera = function() {
 	var deferred = Q.defer();
@@ -289,7 +192,7 @@ var setCameraSetting = function(setting, value){
   return deferred.promise;
 };
 
-var gphotoLiveView = function gphotoLiveView() {
+var gphotoLiveView = function gphotoLiveView(res) {
 	camera.takePicture({
 		preview: true,
 		targetPath: '/foo.XXXXXX'
@@ -300,7 +203,7 @@ var gphotoLiveView = function gphotoLiveView() {
       if(compressionFactor > 1){
         downsize(tmpname, compressionFactor);
       }
-      frameResponse.send(fs.readFileSync(tmpname));
+      res.send(fs.readFileSync(tmpname));
       fs.unlinkSync(tmpname);
     }
   });
@@ -320,12 +223,7 @@ var gphotoCapture = function gphotoCapture() {
           gphotoCapture();
   			} else {
   				console.log("Storage Location: " + tmpname);
-
-
-
           deferred.resolve(tmpname);
-
-
   			}
   		});
 
@@ -365,7 +263,6 @@ function timelapseStep(first) {
                 timelapseStep();
               }
             }
-
           }
         );
       }
@@ -405,10 +302,6 @@ socket.on('set-config', function(config, value){
   });
 });
 
-socket.on('live-view-frame', function() {
-	gphotoLiveView();
-});
-
 socket.on('compression-factor', function(cf){
   console.log("Compression factor updated to: "+cf);
   compressionFactor = cf;
@@ -444,32 +337,6 @@ socket.on('timelapse', function(tl) {
 	timelapseStep(true);
 });
 
-var sendPhoto = function(packet) {
-	var fileData = buffer;
-	var packets = Math.floor(fileData.length / CHUNK_SIZE);
-	if (fileData.length % CHUNK_SIZE) {
-		packets++;
-	}
-
-	var startIndex = packet * CHUNK_SIZE;
-	socket.emit('push-photo', {
-		packet: packet,
-		packets: packets,
-		fd: fileData.slice(startIndex, startIndex + CHUNK_SIZE)
-	});
-};
-
-socket.on('push-photo-success', function(data) {
-	if (data.packet < data.packets - 1) {
-		sendPhoto(data.packet + 1);
-	} else {
-		socket.emit('push-photo-complete');
-		console.log(Date.now() + ": Photo push succesful\r\n");
-		var rm = spawn('rm', ['./' + filename]);
-	}
-});
-
-
 fs.stat(socketPath, function(err) {
 	if (!err) fs.unlinkSync(socketPath);
 	var unixServer = net.createServer(function(localSerialConnection) {
@@ -492,8 +359,9 @@ if(!fs.existsSync('./timelapses')){
   fs.mkdirSync('./timelapses');
 }
 
+sysInit.sysInitSetup(Q, exec);
+sysInit.startWifiAP();
 if(!fs.existsSync('/swap')){
-  sysInit.sysInitSetup(Q, exec);
   sysInit.swapInit();
 }
 

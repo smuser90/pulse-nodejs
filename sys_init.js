@@ -6,6 +6,21 @@ module.exports = {
     exec = _exec;
   },
 
+  startWifiAP : function(){
+    console.log("Running wifi AP init");
+    var deferred = Q.defer();
+    exec(". /home/root/pulse-nodejs/utils/wifiGo.sh", function(error, stdout, stderr){
+      if(error instanceof Error){
+        console.log("Error: "+error);
+        deferred.reject(error);
+      }else{
+        console.log("Success!");
+        deferred.resolve(stdout);
+      }
+    });
+    return deferred.promise;
+  },
+
   swapInit : function(){
     var createSwap = function(){
       console.log("Creating Swap...");
