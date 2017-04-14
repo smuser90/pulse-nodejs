@@ -1,7 +1,7 @@
 
 
 module.exports = {
-  initRoutes : function(_app, _fs, _spawn, _camera, _liveview, _capture, _getCameraImage, _gphotoInit, _downsize, _compressionFactor){
+  initRoutes : function(_app, _fs, _spawn, _getCamera, _liveview, _capture, _getCameraImage, _gphotoInit, _downsize, _compressionFactor){
 
     _app.get('/', function(req, res){
       res.send('Hello Alpine!');
@@ -12,10 +12,11 @@ module.exports = {
     });
 
     _app.get('/list', function(req, res){
-      if(_camera){
-        _camera.close();
+      if(_getCamera()){
+        _getCamera().close();
         console.log('Closed camera connection');
-        _camera = undefined;
+      }else{
+        console.log('No camera connection to close... listing');
       }
 
       var output = '';
