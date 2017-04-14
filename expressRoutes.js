@@ -39,18 +39,19 @@ module.exports = {
       });
     });
 
-    var captureResponse;
     _app.get('/capture', function(req, res){
       _capture().then(function(photoPath){
         var tmp = '/tmp/foo.'+Date.now();
         _getCameraImage(photoPath, tmp).then(
           function(){
+            console.log("Got image. Sending out: "+tmp);
             if(compressionFactor > 1){
               _downsize(tmp, compressionFactor);
             }
             var buffer = _fs.readFileSync(tmp);
             res.send(buffer);
             _fs.unlinkSync(tmp);
+            console.log("Finished sending.");
           }
         );
       });
