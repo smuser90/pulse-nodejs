@@ -12,10 +12,10 @@ module.exports = {
     });
 
     _app.get('/list', function(req, res){
-      if(camera){
-        camera.close();
+      if(_camera){
+        _camera.close();
         console.log('Closed camera connection');
-        camera = undefined;
+        _camera = undefined;
       }
 
       var output = '';
