@@ -54,9 +54,6 @@ var hdrObject = {
   currentStep: 1
 };
 
-var app = require('express')();
-var routes = require('./expressRoutes');
-routes.initRoutes(app, fs, spawn, camera, gphotoLiveView, gphotoCapture, downloadImage, gphotoInit, downsize);
 
 var getCamera = function() {
 	var deferred = Q.defer();
@@ -378,6 +375,10 @@ var gphotoInit = function(){
     }
   );
 };
+
+var app = require('express')();
+var routes = require('./expressRoutes');
+routes.initRoutes(app, fs, spawn, camera, gphotoLiveView, gphotoCapture, downloadImage, gphotoInit, downsize);
 
 console.log("Init complete. Running...");
 gphotoInit();

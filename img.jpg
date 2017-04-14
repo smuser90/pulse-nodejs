@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>TypeError: undefined is not a function<br> &nbsp; &nbsp;at /home/root/pulse-nodejs/expressRoutes.js:44:7<br> &nbsp; &nbsp;at Layer.handle [as handle_request] (/home/root/pulse-nodejs/node_modules/express/lib/router/layer.js:95:5)<br> &nbsp; &nbsp;at next (/home/root/pulse-nodejs/node_modules/express/lib/router/route.js:137:13)<br> &nbsp; &nbsp;at Route.dispatch (/home/root/pulse-nodejs/node_modules/express/lib/router/route.js:112:3)<br> &nbsp; &nbsp;at Layer.handle [as handle_request] (/home/root/pulse-nodejs/node_modules/express/lib/router/layer.js:95:5)<br> &nbsp; &nbsp;at /home/root/pulse-nodejs/node_modules/express/lib/router/index.js:281:22<br> &nbsp; &nbsp;at Function.process_params (/home/root/pulse-nodejs/node_modules/express/lib/router/index.js:335:12)<br> &nbsp; &nbsp;at next (/home/root/pulse-nodejs/node_modules/express/lib/router/index.js:275:10)<br> &nbsp; &nbsp;at expressInit (/home/root/pulse-nodejs/node_modules/express/lib/middleware/init.js:40:5)<br> &nbsp; &nbsp;at Layer.handle [as handle_request] (/home/root/pulse-nodejs/node_modules/express/lib/router/layer.js:95:5)</pre>
+</body>
+</html>
