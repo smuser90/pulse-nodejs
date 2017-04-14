@@ -1,7 +1,7 @@
 
 
 module.exports = {
-  initRoutes : function(_app, _fs, _spawn, _camera, _liveview, _capture, _getCameraImage, _gphotoInit, _downsize){
+  initRoutes : function(_app, _fs, _spawn, _camera, _liveview, _capture, _getCameraImage, _gphotoInit, _downsize, _compressionFactor){
 
     _app.get('/', function(req, res){
       res.send('Hello Alpine!');
@@ -45,10 +45,11 @@ module.exports = {
         _getCameraImage(photoPath, tmp).then(
           function(){
             console.log("Got image. Sending out: "+tmp);
-            if(compressionFactor > 1){
+            if(_compressionFactor > 1){
               _downsize(tmp, compressionFactor);
             }
             var buffer = _fs.readFileSync(tmp);
+            console.log("Got buffer");
             res.send(buffer);
             _fs.unlinkSync(tmp);
             console.log("Finished sending.");
