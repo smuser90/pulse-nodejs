@@ -46,7 +46,7 @@ module.exports = {
           function(){
             console.log("Got image. Sending out: "+tmp);
             if(_compressionFactor > 1){
-              _downsize(tmp, compressionFactor);
+              _downsize(tmp, _compressionFactor);
             }
             var buffer = _fs.readFileSync(tmp);
             console.log("Got buffer");
