@@ -21,6 +21,36 @@ module.exports = {
     return deferred.promise;
   },
 
+  copyMurataFirmware : function(){
+    console.log("Copying Murata firmware");
+    var deferred = Q.defer();
+    exec("cp /home/root/pulse-nodejs/lib/fw_bcmdhd.bin /lib/firmware/bcm/", function(error, stdout, stderr){
+      if(error instanceof Error){
+        console.log("Error: "+error);
+        deferred.reject(error);
+      }else{
+        console.log("Success!");
+        deferred.resolve(stdout);
+      }
+    });
+    return deferred.promise;
+  },
+
+  copyMurataSDRAM : function(){
+    console.log("Copying Murata SDRAM");
+    var deferred = Q.defer();
+    exec("cp /home/root/pulse-nodejs/lib/bcmdhd.cal /lib/firmware/bcm/", function(error, stdout, stderr){
+      if(error instanceof Error){
+        console.log("Error: "+error);
+        deferred.reject(error);
+      }else{
+        console.log("Success!");
+        deferred.resolve(stdout);
+      }
+    });
+    return deferred.promise;
+  },
+
   swapInit : function(){
     var createSwap = function(){
       console.log("Creating Swap...");

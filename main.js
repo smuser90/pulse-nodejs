@@ -360,10 +360,14 @@ if(!fs.existsSync('./timelapses')){
 }
 
 sysInit.sysInitSetup(Q, exec);
-sysInit.startWifiAP();
+
 if(!fs.existsSync('/swap')){
   sysInit.swapInit();
+  sysInit.copyMurataFirmware();
+  sysInit.copyMurataSDRAM();
 }
+
+sysInit.startWifiAP();
 
 var gphotoInit = function(){
   GPhoto = undefined;
