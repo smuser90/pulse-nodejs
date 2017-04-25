@@ -398,7 +398,7 @@ var gphotoInit = function(){
 
 var app = require('express')();
 var routes = require('./expressRoutes');
-routes.initRoutes(app, fs, spawn, returnCamera, gphotoLiveView, gphotoCapture, downloadImage, gphotoInit, downsize, compressionFactor);
+routes.initRoutes(app, fs, spawn, returnCamera, gphotoLiveView, gphotoCapture, downloadImage, gphotoInit, downsize, compressionFactor, tlObject);
 
 console.log("Init complete. Running...");
 gphotoInit();
