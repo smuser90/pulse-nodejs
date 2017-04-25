@@ -1,42 +1,43 @@
 console.log("* Pulse Pro Startup *");
 
+/*
+  Catching uncaught exceptions will help the code continue to run in the event
+  something bad happens
+*/
 process.on('uncaughtException', function (error) {
     console.log("Uncaught Exception: "+error);
 });
 
+/*
+  Begin module imports
+*/
 var mv = require('mv');
 var epeg = require('epeg');
-
 var imageSize = require('image-size');
-
 var spawn = require('child_process').spawn;
 var exec = require('child_process').exec;
-
 var Q = require('q');
 var ss = require('socket.io-stream');
 var fs = require('fs');
 var sysInit = require('./sys_init');
-
 var stream = ss.createStream();
-
 var gphoto2 = require('gphoto2');
-var GPhoto;
-
-var TL_PREVIEW_FPS = 24;
-
-var socketPath = '/run/sock1.sock';
+var socket = require('socket.io-client')('http://192.168.1.101:1025');
+// var socket = require('socket.io-client')('http://10.1.10.124:1025');
 var net = require('net');
+/*
+  End module imports
+*/
 
 var camera;
 var buffer;
-
-var socket = require('socket.io-client')('http://192.168.1.101:1025');
-// var socket = require('socket.io-client')('http://10.1.10.124:1025');
+var socketPath = '/run/sock1.sock';
 var filename = 'photo.jpg';
-
-var start, end;
 var compressionFactor = 10;
 var compressionFactorTL = 10;
+var camSettings;
+var GPhoto;
+var TL_PREVIEW_FPS = 24;
 
 var tlObject = {
 	interval: 1000, // ms
@@ -54,7 +55,9 @@ var hdrObject = {
   currentStep: 1
 };
 
-
+/*
+  Run this to detect connected cameras.
+*/
 var getCamera = function() {
 	var deferred = Q.defer();
 	console.log('Getting list of cameras...');
@@ -70,6 +73,10 @@ var getCamera = function() {
 	return deferred.promise;
 };
 
+/*
+  This sets the camera storage option.
+  On every camera in the office setting this to 1 makes photos save to the SD card
+*/
 var setCameraStorage = function(cam, storage) {
 	var deferred = Q.defer();
 	console.log('Setting camera storage to ' + storage);
@@ -84,6 +91,9 @@ var setCameraStorage = function(cam, storage) {
 	return deferred.promise;
 };
 
+/*
+   This function will downsize a jpeg by a factor specified by factor
+*/
 var downsize = function(imagePath, factor){
   var dimensions = imageSize(imagePath);
   console.log("Downsizing image "+imagePath+"\n"+"Image Size: "+dimensions.width+' x '+dimensions.height);
@@ -95,6 +105,10 @@ var downsize = function(imagePath, factor){
   return downres;
 };
 
+
+/*
+  Retrieves camera configs and assigns them to global camSettings variable
+*/
 var getCameraSettings = function(){
   var deferred = Q.defer();
   console.log("Getting camera shutter setting...");
@@ -108,7 +122,9 @@ var getCameraSettings = function(){
   return deferred.promise;
 };
 
-var camSettings;
+/*
+  HDR step function
+*/
 var hdrPhoto = function(photos){
   console.log("HDR Photo: "+photos);
   var shutterSettings = camSettings.capturesettings.children.shutterspeed2.choices;
@@ -142,6 +158,9 @@ var calculateEV = function(shutterSettings){
   return 1 / steps;
 };
 
+/*
+  Promised based wrapper to get an image from the camera's filesystem
+*/
 var downloadImage = function(source, destination){
   var deferred = Q.defer();
   console.log("Downloading Image from camera: "+source+ " to destination: " + destination);
@@ -177,6 +196,9 @@ var returnCamera = function(){
   return camera;
 };
 
+/*
+ Promised based wrapper for setting camera configs
+*/
 var setCameraSetting = function(setting, value){
   var deferred = Q.defer();
   console.log('Setting camera '+setting+' to '+value);
@@ -192,6 +214,10 @@ var setCameraSetting = function(setting, value){
   return deferred.promise;
 };
 
+/*
+  Will retrieve a live view frame from the camera.
+  Fails silently if not supported
+*/
 var gphotoLiveView = function gphotoLiveView(res) {
 	camera.takePicture({
 		preview: true,
@@ -209,6 +235,9 @@ var gphotoLiveView = function gphotoLiveView(res) {
   });
 };
 
+/*
+  Promised based wrapper for node-gphoto's capture
+*/
 var gphotoCapture = function gphotoCapture() {
   console.log("Capturing Photo");
   var deferred = Q.defer();
@@ -230,7 +259,12 @@ var gphotoCapture = function gphotoCapture() {
   return deferred.promise;
 };
 
-function timelapseStep(first) {
+
+/*
+  This is the step function for a timelapse.
+  It sets a timeout to take the next picture based on the latency of the last picture.
+*/
+var timelapseStep = function timelapseStep(first) {
   var waitTime;
   var elapsed = tlObject.endPhoto - tlObject.startPhoto;
   if(elapsed > tlObject.interval || first){
@@ -247,13 +281,20 @@ function timelapseStep(first) {
           cameraSource: photoPath
         };
         var destination = tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'.jpg';
+        // Download the picture we just took and put it in the TL directory
         downloadImage(photoPath, destination).then(
           function(){
+            // Now lets downsize it to a 'thumbnail' based on the compressionFactor
             downsize(destination, compressionFactorTL);
+            // Write the meta data file so we know which image on the camera file structure this came from.
             fs.writeFile(tlObject.tlDirectory+'/'+(tlObject.total-tlObject.photos)+'-meta.txt', JSON.stringify(metaData));
+
+            // If the timelapse is still running
             if(tlObject.running){
               tlObject.endPhoto = Date.now();
       				tlObject.photos--;
+
+              // Check to see if this was the last photo of the TL
               if (tlObject.photos < 0) {
           			tlObject.running = false;
                 console.log("Timelapse complete!      :D");
@@ -268,7 +309,7 @@ function timelapseStep(first) {
       }
     );
 	}, waitTime);
-}
+};
 
 
 /*
@@ -288,6 +329,10 @@ socket.on('capture-photo', function() {
 	gphotoCapture();
 });
 
+
+/*
+  Will return the camera config object to the client
+*/
 socket.on('get-configs', function() {
   camera.getConfig(
     function(er, settings){
@@ -300,6 +345,9 @@ socket.on('get-configs', function() {
   );
 });
 
+/*
+ Given a config and value, this function sets that on the camera
+*/
 socket.on('set-config', function(config, value){
   console.log("Rx'd set config: "+config+' '+value);
   camera.setConfigValue(config, value, function(er){
@@ -311,16 +359,26 @@ socket.on('set-config', function(config, value){
   });
 });
 
+/*
+  Sets the compression factor for general images
+*/
+
 socket.on('compression-factor', function(cf){
   console.log("Compression factor updated to: "+cf);
   compressionFactor = cf;
 });
 
+/*
+  Sets the compression factor for timelapse preview images
+*/
 socket.on('compression-factor-tl', function(cf){
   console.log("TL compression factor updated to: "+cf);
   compressionFactorTL = cf;
 });
 
+/*
+  Command to trigger an HDR
+*/
 socket.on('hdr', function(hdr) {
 	hdrObject.evPerStep = hdr.evPerStep / 3;
   hdrObject.steps = hdr.steps;
@@ -328,6 +386,10 @@ socket.on('hdr', function(hdr) {
   hdrPhoto(hdrObject.steps);
 });
 
+
+/*
+  Command to trigger a timelapse
+*/
 socket.on('timelapse', function(tl) {
   tlObject.tlDirectory = __dirname+'/timelapses/tl'+Date.now();
 

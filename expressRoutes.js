@@ -1,4 +1,13 @@
-
+/*
+  This file contains all the http routes for bulk data transfer
+  Currently they are:
+    frame : get a live view fram
+    list : get a list of all files on the camera
+    capture : take a photo and return the image
+    file : return a file from Pulse's filesystem
+    cameraFile : return a file from the camera's filesystem
+    tlPreview : return a frame of the last taken or current timelapse
+*/
 
 module.exports = {
   initRoutes : function(_app, _fs, _spawn, _getCamera, _liveview, _capture, _getCameraImage, _gphotoInit, _downsize, _compressionFactor, _tlObject){

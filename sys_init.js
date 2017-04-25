@@ -1,3 +1,15 @@
+/*
+  These functions are called on system initilization if need be.
+  There are functions to:
+    -copy over the murata firmware to the correct location
+    -start the wifi access point
+    -create a swap file and make sure it persists for future sessions
+
+  All functions are promised based so they can be chained synchronously if necessary.
+  The swap creation functions are the only ones at the moment that *need* to be synchronously
+  chained.
+*/
+
 var Q, exec;
 
 module.exports = {
