@@ -30,7 +30,7 @@ var net = require('net');
 var camera;
 var buffer;
 
-var socket = require('socket.io-client')('http://192.168.1.100:1025');
+var socket = require('socket.io-client')('http://192.168.1.101:1025');
 // var socket = require('socket.io-client')('http://10.1.10.124:1025');
 var filename = 'photo.jpg';
 
@@ -270,10 +270,19 @@ function timelapseStep(first) {
 	}, waitTime);
 }
 
+
+/*
+  This is the connection callback. It doesn't do anything right now
+*/
 socket.on('connect', function() {
 	console.log(Date.now() + ": Connected to client. Awaiting commands...");
 });
 
+
+/*
+  Callback for the capture-photo command,
+  This will only trigger a capture, not return the photo.
+*/
 socket.on('capture-photo', function() {
 	console.log(Date.now() + ": Initiating photo capture...");
 	gphotoCapture();
@@ -361,6 +370,10 @@ if(!fs.existsSync('./timelapses')){
 
 sysInit.sysInitSetup(Q, exec);
 
+
+/*
+The following should only run the first time
+*/
 if(!fs.existsSync('/swap')){
   sysInit.swapInit();
   sysInit.copyMurataFirmware();

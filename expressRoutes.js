@@ -1,7 +1,7 @@
 
 
 module.exports = {
-  initRoutes : function(_app, _fs, _spawn, _getCamera, _liveview, _capture, _getCameraImage, _gphotoInit, _downsize, _compressionFactor){
+  initRoutes : function(_app, _fs, _spawn, _getCamera, _liveview, _capture, _getCameraImage, _gphotoInit, _downsize, _compressionFactor, _tlObject){
 
     _app.get('/', function(req, res){
       res.send('Hello Alpine!');
@@ -85,10 +85,10 @@ module.exports = {
 
     var tlFrameIndex = 1;
     _app.get('/tlPreview', function(req, res){
-      var buffer = _fs.readFileSync(tlObject.tlDirectory+'/'+tlFrameIndex+'.jpg');
+      var buffer = _fs.readFileSync(_tlObject.tlDirectory+'/'+tlFrameIndex+'.jpg');
         res.send(buffer);
         tlFrameIndex++;
-        if(tlFrameIndex > tlObject.total){
+        if(tlFrameIndex > _tlObject.total){
           tlFrameIndex = 1;
         }
     });
