@@ -4,4 +4,4 @@ echo /lib/firmware/bcm/fw_bcmdhd.bin > /sys/module/bcmdhd/parameters/firmware_pa
 echo /lib/firmware/bcm/bcmdhd.cal > /sys/module/bcmdhd/parameters/nvram_path
 ifconfig wlan0 192.168.1.1 up
 udhcpd -S -I 192.168.1.1 /etc/udhcpd.conf
-hostapd -B /etc/hostapd.conf
+hostapd -B /etc/hostapd.conf #this is what we edit if we want to change wifi config

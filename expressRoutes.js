@@ -9,6 +9,9 @@
     tlPreview : return a frame of the last taken or current timelapse
 */
 
+/*
+to make a query you would send in //192.168.1.1:/file?var=...&var2=...&var3=...
+*/
 module.exports = {
   initRoutes : function(_app, _fs, _spawn, _getCamera, _liveview, _capture, _getCameraImage, _gphotoInit, _downsize, _compressionFactor, _tlObject){
 
@@ -67,7 +70,7 @@ module.exports = {
         );
       });
     });
-
+    //192.168.1.1:/file?path=...
     _app.get('/file', function(req, res){
       var path = req.query.path;
       if(path){

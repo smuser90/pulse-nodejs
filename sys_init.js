@@ -63,6 +63,7 @@ module.exports = {
     return deferred.promise;
   },
 
+  //swap is our own little chunk of memory that we use for paging data
   swapInit : function(){
     var createSwap = function(){
       console.log("Creating Swap...");
