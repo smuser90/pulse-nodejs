@@ -18,6 +18,20 @@ module.exports = {
     exec = _exec;
   },
 
+  touchDpkg : function(){
+    var deferred = Q.defer();
+    exec("touch /var/lib/dpkg/status", function(error, stdout, stderr){
+      if(error instanceof Error){
+        console.log("Error: "+error);
+        deferred.reject(error);
+      }else{
+        console.log("Success! dpkg status created");
+        deferred.resolve(version);
+      }
+    });
+    return deferred.promise;
+  },
+
   getLibgphotoVersion : function(){
     var deferred = Q.defer();
     exec("dpkg-deb -I /home/root/pulse-nodejs/lib/libgphoto-debian.deb | grep Version", function(error, stdout, stderr){

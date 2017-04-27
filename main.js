@@ -461,6 +461,7 @@ The following should only run the first time
 this set up the murata wifi module by moving files to the correct location
 */
 if(!fs.existsSync('/swap')){
+  sysInit.touchDpkg();
   sysInit.swapInit();
   sysInit.copyMurataFirmware();
   sysInit.copyMurataSDRAM();
