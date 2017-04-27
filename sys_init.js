@@ -18,6 +18,21 @@ module.exports = {
     exec = _exec;
   },
 
+  getLibgphotoVersion : function(){
+    var deferred = Q.defer();
+    exec("dpkg-deb -I /home/root/pulse-nodejs/lib/libgphoto-debian.deb | grep Version", function(error, stdout, stderr){
+      if(error instanceof Error){
+        console.log("Error: "+error);
+        deferred.reject(error);
+      }else{
+        var version = stdout.split(' ')[2].split('.');
+        console.log("Success! "+stdout.split(' ')[2]);
+        deferred.resolve(version);
+      }
+    });
+    return deferred.promise;
+  },
+
   startWifiAP : function(){
     console.log("Running wifi AP init");
     var deferred = Q.defer();

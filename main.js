@@ -452,7 +452,9 @@ if(!fs.existsSync('./timelapses')){
 }
 
 sysInit.sysInitSetup(Q, exec);
-
+sysInit.getLibgphotoVersion().then(function(version){
+  console.log("Got the libgphoto version!");
+});
 
 /*
 The following should only run the first time
