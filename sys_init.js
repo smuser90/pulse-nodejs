@@ -64,7 +64,17 @@ module.exports = {
   },
 
   installLibgphoto : function(){
-
+    var deferred = Q.defer();
+    exec("dpkg -i /home/root/pulse-nodejs/lib/libgphoto-debian.deb", function(error, stdout, stderr){
+      if(error instanceof Error){
+        console.log("Error: "+error);
+        deferred.reject(error);
+      }else{
+        console.log("Success! " + stdout);
+        deferred.resolve(stdout);
+      }
+    });
+    return deferred.promise;
   },
 
   startWifiAP : function(){

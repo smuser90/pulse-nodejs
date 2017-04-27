@@ -454,12 +454,25 @@ if(!fs.existsSync('./timelapses')){
 sysInit.sysInitSetup(Q, exec);
 if(!fs.existsSync('/var/lib/dpkg/status')){
   sysInit.touchDpkg();
+  sysInit.installLibgphoto();
 }
 
 sysInit.getLibgphotoVersion().then(function(version){
   console.log("Got the available libgphoto version!");
   sysInit.getInstalledLibgphotoVersion().then(function(iVersion){
     console.log("Got the installed libgphoto version");
+    var needsUpdating = false;
+    for(var i = 0; i < version.length; i++){
+      if(version[i] > iVersion[i]){
+        console.log("A more recent version of libgphoto is available... installing");
+        needsUpdating = true;
+      }
+    }
+    if(needsUpdating){
+      sysInit.installLibgphoto();
+    }else{
+      console.log("libgphoto is most recent version and does not need updating");
+    }
   });
 });
 
@@ -468,7 +481,6 @@ The following should only run the first time
 this set up the murata wifi module by moving files to the correct location
 */
 if(!fs.existsSync('/swap')){
-  sysInit.touchDpkg();
   sysInit.swapInit();
   sysInit.copyMurataFirmware();
   sysInit.copyMurataSDRAM();
