@@ -47,6 +47,26 @@ module.exports = {
     return deferred.promise;
   },
 
+  getInstalledLibgphotoVersion : function(){
+
+    var deferred = Q.defer();
+    exec("dpkg -l | grep libgphoto2 | awk '{print $3}'", function(error, stdout, stderr){
+      if(error instanceof Error){
+        console.log("Error: "+error);
+        deferred.reject(error);
+      }else{
+        var version = stdout.split('.');
+        console.log("Success! " + stdout);
+        deferred.resolve(version);
+      }
+    });
+    return deferred.promise;
+  },
+
+  installLibgphoto : function(){
+
+  },
+
   startWifiAP : function(){
     console.log("Running wifi AP init");
     var deferred = Q.defer();

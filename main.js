@@ -452,8 +452,15 @@ if(!fs.existsSync('./timelapses')){
 }
 
 sysInit.sysInitSetup(Q, exec);
+if(!fs.existsSync('/var/lib/dpkg/status')){
+  sysInit.touchDpkg();
+}
+
 sysInit.getLibgphotoVersion().then(function(version){
-  console.log("Got the libgphoto version!");
+  console.log("Got the available libgphoto version!");
+  sysInit.getInstalledLibgphotoVersion().then(function(iVersion){
+    console.log("Got the installed libgphoto version");
+  });
 });
 
 /*
