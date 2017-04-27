@@ -348,6 +348,16 @@ socket.on('capture-photo', function() {
 	gphotoCapture();
 });
 
+socket.on('git-pull', function(){
+  console.log("Attempting to pull firmware update...");
+  exec('git pull',function(er, stdout, stderr){
+    if(er){
+      console.log("Unable to update firmware");
+    }else{
+      console.log('Git pull succesful');
+    }
+  });
+});
 
 /*
   Will return the camera config object to the client
